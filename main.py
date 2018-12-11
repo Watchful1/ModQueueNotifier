@@ -8,6 +8,7 @@ import configparser
 import time
 import traceback
 import requests
+import math
 from datetime import datetime
 from datetime import timedelta
 
@@ -89,20 +90,27 @@ while True:
 
 		sub = r.subreddit(SUBREDDIT)
 		unmod_count = 0
+		oldest_unmod = datetime.utcnow()
 		reported_count = 0
 		mail_count = 0
 		for submission in sub.mod.unmoderated():
 			unmod_count += 1
+			oldest_unmod = datetime.utcfromtimestamp(submission.created_utc)
 		for thing in sub.mod.modqueue():
 			reported_count += 1
 		for conversation in sub.modmail.conversations(state='all'):
 			mail_count += 1
 
-		log.debug(f"Unmod: {unmod_count}, modqueue: {reported_count}, modmail: {mail_count}")
+		oldest_age = datetime.utcnow() - oldest_unmod
+		oldest_age = math.trunc(oldest_age.seconds / (60 * 60))
+
+		log.debug(f"Unmod: {unmod_count}, age: {oldest_age}, modqueue: {reported_count}, modmail: {mail_count}")
 
 		results = []
 		if unmod_count >= 20:
 			results.append(f"Unmod: {unmod_count}")
+		if oldest_age >= 6:
+			results.append(f"Oldest unmod in hours: {oldest_age}")
 		if reported_count >= 10:
 			results.append(f"Modqueue: {reported_count}")
 		if mail_count >= 5:
@@ -111,7 +119,8 @@ while True:
 
 		if len(results) > 0 and (last_posted is None or datetime.utcnow() - timedelta(hours=1) > last_posted):
 			log.info(f"Posting: {count_string}")
-			requests.post(WEBHOOK, data={"content": count_string})
+			if not debug:
+				requests.post(WEBHOOK, data={"content": count_string})
 			last_posted = datetime.utcnow()
 
 		log.debug("Run complete after: %d", int(time.perf_counter() - startTime))
