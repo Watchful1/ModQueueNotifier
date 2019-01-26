@@ -20,6 +20,22 @@ WEBHOOK = "https://discordapp.com/api/webhooks/{}/{}"
 LOG_LEVEL = logging.DEBUG
 
 
+THRESHOLDS = {
+	'unmod': {'post': 15, 'ping': 20},
+	'unmod_hours': {'post': 4, 'ping': 6},
+	'modqueue': {'post': 8, 'ping': 12},
+	'modmail': {'post': 5, 'ping': 8},
+}
+
+
+def check_threshold(bldr, level, key, string):
+	if level >= THRESHOLDS[key]['post']:
+		bldr.append(string)
+	if level >= THRESHOLDS[key]['ping']:
+		return True
+	return False
+
+
 LOG_FOLDER_NAME = "logs"
 if not os.path.exists(LOG_FOLDER_NAME):
 	os.makedirs(LOG_FOLDER_NAME)
@@ -107,15 +123,14 @@ while True:
 		log.debug(f"Unmod: {unmod_count}, age: {oldest_age}, modqueue: {reported_count}, modmail: {mail_count}")
 
 		results = []
-		if unmod_count >= 20:
-			results.append(f"Unmod: {unmod_count}")
-		if oldest_age >= 6:
-			results.append(f"Oldest unmod in hours: {oldest_age}")
-		if reported_count >= 10:
-			results.append(f"Modqueue: {reported_count}")
-		if mail_count >= 5:
-			results.append(f"Modmail: {mail_count}")
+		ping_here = False
+		ping_here = ping_here or check_threshold(results, unmod_count, 'unmod', f"Unmod: {unmod_count}")
+		ping_here = ping_here or check_threshold(results, oldest_age, 'unmod_hours', f"Oldest unmod in hours: {oldest_age}")
+		ping_here = ping_here or check_threshold(results, reported_count, 'modqueue', f"Modqueue: {reported_count}")
+		ping_here = ping_here or check_threshold(results, mail_count, 'modmail', f"Modmail: {mail_count}")
 		count_string = ', '.join(results)
+		if ping_here:
+			count_string = "@here " + count_string
 
 		if len(results) > 0 and (last_posted is None or datetime.utcnow() - timedelta(hours=1) > last_posted):
 			log.info(f"Posting: {count_string}")
