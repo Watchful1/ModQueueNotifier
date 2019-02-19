@@ -9,6 +9,7 @@ import time
 import traceback
 import requests
 import math
+from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
 
@@ -98,6 +99,7 @@ WEBHOOK = WEBHOOK.format(WEBHOOK_ID, TOKEN_ID)
 log.info("Logged into reddit as /u/{}".format(str(r.user.me())))
 
 last_posted = None
+has_posted = False
 
 while True:
 	try:
@@ -132,11 +134,35 @@ while True:
 		if ping_here:
 			count_string = "@here " + count_string
 
-		if len(results) > 0 and (last_posted is None or datetime.utcnow() - timedelta(hours=1) > last_posted):
-			log.info(f"Posting: {count_string}")
-			if not debug:
-				requests.post(WEBHOOK, data={"content": count_string})
-			last_posted = datetime.utcnow()
+		if last_posted is None or datetime.utcnow() - timedelta(hours=1) > last_posted:
+			if len(results) > 0:
+				log.info(f"Posting: {count_string}")
+				if not debug:
+					requests.post(WEBHOOK, data={"content": count_string})
+				last_posted = datetime.utcnow()
+				has_posted = True
+			else:
+				if unmod_count == 0 and reported_count == 0 and mail_count == 0:
+					log.info("Queue clear, figuring out who cleared it")
+					mods = defaultdict(int)
+					for item in sub.mod.log(limit=50):
+						minutes_old = (datetime.utcnow() - datetime.utcfromtimestamp(item.created_utc)).seconds / 60
+						if minutes_old < 120:
+							mods[item.mod] += 1
+					mod_clear = None
+					for mod in mods:
+						if mods[mod] > 25:
+							mod_clear = mod
+
+					if mod_clear is not None:
+						clear_string = f"{mod_clear} cleared the queues!"
+						log.info(clear_string)
+						if not debug:
+							requests.post(WEBHOOK, data={"content": clear_string})
+					else:
+						log.info("Couldn't figure out who cleared the queue")
+
+				has_posted = False
 
 		log.debug("Run complete after: %d", int(time.perf_counter() - startTime))
 	except Exception as err:
