@@ -153,7 +153,7 @@ while True:
 						mods[item.mod] += 1
 				mod_clear = None
 				for mod in mods:
-					if mods[mod] > 25:
+					if mods[mod] > 20:
 						mod_clear = mod
 
 				if mod_clear is not None:
