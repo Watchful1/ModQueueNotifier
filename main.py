@@ -142,25 +142,27 @@ while True:
 				last_posted = datetime.utcnow()
 				has_posted = True
 			else:
-				if unmod_count == 0 and reported_count == 0 and mail_count == 0:
-					log.info("Queue clear, figuring out who cleared it")
-					mods = defaultdict(int)
-					for item in sub.mod.log(limit=50):
-						minutes_old = (datetime.utcnow() - datetime.utcfromtimestamp(item.created_utc)).seconds / 60
-						if minutes_old < 120:
-							mods[item.mod] += 1
-					mod_clear = None
-					for mod in mods:
-						if mods[mod] > 25:
-							mod_clear = mod
+				has_posted = False
+		else:
+			if unmod_count == 0 and reported_count == 0 and mail_count == 0:
+				log.info("Queue clear, figuring out who cleared it")
+				mods = defaultdict(int)
+				for item in sub.mod.log(limit=50):
+					minutes_old = (datetime.utcnow() - datetime.utcfromtimestamp(item.created_utc)).seconds / 60
+					if minutes_old < 120:
+						mods[item.mod] += 1
+				mod_clear = None
+				for mod in mods:
+					if mods[mod] > 25:
+						mod_clear = mod
 
-					if mod_clear is not None:
-						clear_string = f"{mod_clear} cleared the queues!"
-						log.info(clear_string)
-						if not debug:
-							requests.post(WEBHOOK, data={"content": clear_string})
-					else:
-						log.info("Couldn't figure out who cleared the queue")
+				if mod_clear is not None:
+					clear_string = f"{mod_clear} cleared the queues!"
+					log.info(clear_string)
+					if not debug:
+						requests.post(WEBHOOK, data={"content": clear_string})
+				else:
+					log.info("Couldn't figure out who cleared the queue")
 
 				has_posted = False
 
