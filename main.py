@@ -144,10 +144,10 @@ while True:
 			else:
 				has_posted = False
 		else:
-			if unmod_count == 0 and reported_count == 0 and mail_count == 0:
+			if has_posted and (unmod_count == 0 and reported_count == 0 and mail_count == 0):
 				log.info("Queue clear, figuring out who cleared it")
 				mods = defaultdict(int)
-				for item in sub.mod.log(limit=50):
+				for item in sub.mod.log(limit=40):
 					minutes_old = (datetime.utcnow() - datetime.utcfromtimestamp(item.created_utc)).seconds / 60
 					if minutes_old < 120:
 						mods[item.mod] += 1
