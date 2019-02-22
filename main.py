@@ -15,7 +15,7 @@ from datetime import timedelta
 
 SUBREDDIT = "CompetitiveOverwatch"
 USER_AGENT = "ModQueueNotifier (by /u/Watchful1)"
-LOOP_TIME = 5 * 60
+LOOP_TIME = 2 * 60
 REDDIT_OWNER = "Watchful1"
 WEBHOOK = "https://discordapp.com/api/webhooks/{}/{}"
 LOG_LEVEL = logging.DEBUG
@@ -144,7 +144,7 @@ while True:
 			else:
 				has_posted = False
 		else:
-			if has_posted and (unmod_count == 0 and reported_count == 0 and mail_count == 0):
+			if has_posted and (unmod_count == 0 and reported_count == 0 and mail_count <= 1):
 				log.info("Queue clear, figuring out who cleared it")
 				mods = defaultdict(int)
 				for item in sub.mod.log(limit=40):
