@@ -126,10 +126,10 @@ while True:
 
 		results = []
 		ping_here = False
-		ping_here = ping_here or check_threshold(results, unmod_count, 'unmod', f"Unmod: {unmod_count}")
-		ping_here = ping_here or check_threshold(results, oldest_age, 'unmod_hours', f"Oldest unmod in hours: {oldest_age}")
-		ping_here = ping_here or check_threshold(results, reported_count, 'modqueue', f"Modqueue: {reported_count}")
-		ping_here = ping_here or check_threshold(results, mail_count, 'modmail', f"Modmail: {mail_count}")
+		ping_here = check_threshold(results, unmod_count, 'unmod', f"Unmod: {unmod_count}") or ping_here
+		ping_here = check_threshold(results, oldest_age, 'unmod_hours', f"Oldest unmod in hours: {oldest_age}") or ping_here
+		ping_here = check_threshold(results, reported_count, 'modqueue', f"Modqueue: {reported_count}") or ping_here
+		ping_here = check_threshold(results, mail_count, 'modmail', f"Modmail: {mail_count}") or ping_here
 		count_string = ', '.join(results)
 		if ping_here:
 			count_string = "@here " + count_string
