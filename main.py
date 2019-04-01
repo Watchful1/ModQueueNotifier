@@ -144,6 +144,8 @@ while True:
 					elif submission.locked or submission.removed:
 						if len(submission.comments) and submission.comments[0].stickied:
 							archive = f"Removed by u/{submission.comments[0].author.name}"
+					elif submission.approved:
+						archive = f"Approved by u/{submission.approved_by}"
 
 			if archive is not None:
 				log.info(f"Archiving automod notification: {conversation.id}")
