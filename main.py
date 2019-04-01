@@ -118,6 +118,7 @@ while True:
 
 			if submission.author.name == "AutoModerator" and "Weekly Short Questions Megathread" in submission.title:
 				log.info(f"Found new short questions thread, updating sidebar: {submission.id}")
+				submission.approve()
 				wiki_page = sub.wiki['config/sidebar']
 				edited_sidebar = re.sub(
 					r'(\[Short Questions Megathread\]\(https://redd.it/)(\w{4,8})',
