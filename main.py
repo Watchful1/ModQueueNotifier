@@ -9,6 +9,7 @@ import time
 import traceback
 import requests
 import math
+import re
 from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
@@ -51,9 +52,10 @@ log_stderrHandler = logging.StreamHandler()
 log_stderrHandler.setFormatter(log_formatter)
 log.addHandler(log_stderrHandler)
 if LOG_FILENAME is not None:
-	log_fileHandler = logging.handlers.RotatingFileHandler(LOG_FILENAME,
-	                                                       maxBytes=LOG_FILE_MAXSIZE,
-	                                                       backupCount=LOG_FILE_BACKUPCOUNT)
+	log_fileHandler = logging.handlers.RotatingFileHandler(
+		LOG_FILENAME,
+		maxBytes=LOG_FILE_MAXSIZE,
+		backupCount=LOG_FILE_BACKUPCOUNT)
 	log_fileHandler.setFormatter(log_formatter)
 	log.addHandler(log_fileHandler)
 
@@ -117,7 +119,25 @@ while True:
 		for thing in sub.mod.modqueue():
 			reported_count += 1
 		for conversation in sub.modmail.conversations(state='all'):
-			mail_count += 1
+			archive = None
+			if len(conversation.authors) == 1 and \
+					conversation.authors[0].name == "AutoModerator" and \
+					len(conversation.messages) == 1:
+				links = re.findall(r'(?:reddit.com/r/\w*/comments/)(\w*)', conversation.messages[0].body_markdown)
+				if len(links) == 1:
+					submission = r.submission(links[0])
+					if submission.selftext == "[deleted]" or submission.author == "[deleted]":
+						archive = "Deleted by user"
+					elif submission.locked or submission.removed:
+						if len(submission.comments) and submission.comments[0].stickied:
+							archive = f"Removed by u/{submission.comments[0].author.name}"
+
+			if archive is not None:
+				log.info(f"Archiving automod notification: {conversation.id}")
+				conversation.reply(archive)
+				conversation.archive()
+			else:
+				mail_count += 1
 
 		oldest_age = datetime.utcnow() - oldest_unmod
 		oldest_age = math.trunc(oldest_age.seconds / (60 * 60))
