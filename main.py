@@ -115,6 +115,18 @@ while True:
 			if datetime.utcfromtimestamp(submission.created_utc) < flair_checked:
 				flair_checked = datetime.utcnow()
 				break
+
+			if submission.author.name == "AutoModerator" and "Weekly Short Questions Megathread" in submission.title:
+				log.info(f"Found new short questions thread, updating sidebar: {submission.id}")
+				wiki_page = sub.wiki['config/sidebar']
+				edited_sidebar = re.sub(
+					r'(\[Short Questions Megathread\]\(https://redd.it/)(\w{4,8})',
+					f"\\1{submission.id}",
+					wiki_page.content_md
+				)
+				if not debug:
+					wiki_page.edit(edited_sidebar)
+
 			if submission.approved and submission.link_flair_text is None:
 				blame_string = f"u/{submission.approved_by} approved without adding a flair: https://www.reddit.com{submission.permalink}"
 				log.info(f"Posting: {blame_string}")
@@ -149,8 +161,9 @@ while True:
 
 			if archive is not None:
 				log.info(f"Archiving automod notification: {conversation.id}")
-				conversation.reply(archive)
-				conversation.archive()
+				if not debug:
+					conversation.reply(archive)
+					conversation.archive()
 			else:
 				mail_count += 1
 
