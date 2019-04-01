@@ -101,6 +101,7 @@ WEBHOOK = WEBHOOK.format(WEBHOOK_ID, TOKEN_ID)
 log.info("Logged into reddit as /u/{}".format(str(r.user.me())))
 
 last_posted = None
+flair_checked = datetime.utcnow()
 has_posted = False
 
 while True:
@@ -109,6 +110,18 @@ while True:
 		log.debug("Starting run")
 
 		sub = r.subreddit(SUBREDDIT)
+
+		for submission in sub.new(limit=25):
+			if datetime.utcfromtimestamp(submission.created_utc) < flair_checked:
+				flair_checked = datetime.utcnow()
+				break
+			if submission.approved and submission.link_flair_text is None:
+				blame_string = f"u/{submission.approved_by} approved without adding a flair: https://www.reddit.com{submission.permalink}"
+				log.info(f"Posting: {blame_string}")
+				if not debug:
+					requests.post(WEBHOOK, data={"content": blame_string})
+
+
 		unmod_count = 0
 		oldest_unmod = datetime.utcnow()
 		reported_count = 0
