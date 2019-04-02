@@ -112,7 +112,7 @@ while True:
 		sub = r.subreddit(SUBREDDIT)
 
 		for submission in sub.new(limit=25):
-			if datetime.utcfromtimestamp(submission.created_utc) < flair_checked:
+			if datetime.utcfromtimestamp(submission.created_utc) <= flair_checked:
 				flair_checked = datetime.utcnow()
 				break
 
@@ -129,7 +129,7 @@ while True:
 					wiki_page.edit(edited_sidebar)
 
 			if submission.approved and submission.link_flair_text is None:
-				blame_string = f"u/{submission.approved_by} approved without adding a flair: https://www.reddit.com{submission.permalink}"
+				blame_string = f"u/{submission.approved_by} approved without adding a flair: <https://www.reddit.com{submission.permalink}>"
 				log.info(f"Posting: {blame_string}")
 				if not debug:
 					requests.post(WEBHOOK, data={"content": blame_string})
