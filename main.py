@@ -30,6 +30,22 @@ THRESHOLDS = {
 }
 
 
+class Queue:
+	def __init__(self, max_size):
+		self.list = []
+		self.max_size = max_size
+		self.set = set()
+
+	def put(self, item):
+		if len(self.list) >= self.max_size:
+			self.list.pop(0)
+		self.list.append(item)
+		self.set.add(item)
+
+	def contains(self, item):
+		return item in self.set
+
+
 def check_threshold(bldr, level, key, string):
 	if level >= THRESHOLDS[key]['post']:
 		bldr.append(string)
@@ -101,8 +117,10 @@ WEBHOOK = WEBHOOK.format(WEBHOOK_ID, TOKEN_ID)
 log.info("Logged into reddit as /u/{}".format(str(r.user.me())))
 
 last_posted = None
-flair_checked = datetime.utcnow()
+post_checked = datetime.utcnow()
+posts_notified = Queue(50)
 has_posted = False
+
 
 while True:
 	try:
@@ -112,25 +130,28 @@ while True:
 		sub = r.subreddit(SUBREDDIT)
 
 		for submission in sub.new(limit=25):
-			if datetime.utcfromtimestamp(submission.created_utc) <= flair_checked:
-				flair_checked = datetime.utcnow()
-				break
+			processed = False
+			if datetime.utcfromtimestamp(submission.created_utc) <= post_checked:
+				post_checked = datetime.utcnow()
+				processed = True
 
-			if submission.author.name == "AutoModerator" and "Weekly Short Questions Megathread" in submission.title:
-				log.info(f"Found new short questions thread, updating sidebar: {submission.id}")
-				submission.mod.approve()
-				wiki_page = sub.wiki['config/sidebar']
-				edited_sidebar = re.sub(
-					r'(\[Short Questions Megathread\]\(https://redd.it/)(\w{4,8})',
-					f"\\1{submission.id}",
-					wiki_page.content_md
-				)
-				if not debug:
-					wiki_page.edit(edited_sidebar)
+			if not processed:
+				if submission.author.name == "AutoModerator" and "Weekly Short Questions Megathread" in submission.title:
+					log.info(f"Found new short questions thread, updating sidebar: {submission.id}")
+					submission.mod.approve()
+					wiki_page = sub.wiki['config/sidebar']
+					edited_sidebar = re.sub(
+						r'(\[Short Questions Megathread\]\(https://redd.it/)(\w{4,8})',
+						f"\\1{submission.id}",
+						wiki_page.content_md
+					)
+					if not debug:
+						wiki_page.edit(edited_sidebar)
 
-			if submission.approved and submission.link_flair_text is None:
+			if submission.approved and submission.link_flair_text is None and not posts_notified.contains(submission.id):
 				blame_string = f"u/{submission.approved_by} approved without adding a flair: <https://www.reddit.com{submission.permalink}>"
 				log.info(f"Posting: {blame_string}")
+				posts_notified.put(submission.id)
 				if not debug:
 					requests.post(WEBHOOK, data={"content": blame_string})
 
