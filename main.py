@@ -140,7 +140,7 @@ while True:
 
 				if approve:
 					log.info(f"Reapproving item: {item.id}")
-					item.approve()
+					item.mod.approve()
 
 		for submission in sub.new(limit=25):
 			processed = False
