@@ -129,6 +129,19 @@ while True:
 
 		sub = r.subreddit(SUBREDDIT)
 
+		allowed_reasons = ['#2 No Off-Topic or Low-effort Content', 'This is spam']
+		for item in sub.mod.modqueue():
+			if item.approved:
+				approve = True
+				for report in item.user_reports:
+					if report[0] not in allowed_reasons:
+						approve = False
+						break
+
+				if approve:
+					log.info(f"Reapproving item: {item.id}")
+					item.approve()
+
 		for submission in sub.new(limit=25):
 			processed = False
 			if datetime.utcfromtimestamp(submission.created_utc) <= post_checked:
