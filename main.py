@@ -29,6 +29,24 @@ THRESHOLDS = {
 	'modmail': {'post': 5, 'ping': 8},
 }
 
+MODERATORS = {
+	"ExcitablePancake": "123149791864684545",
+	"Jawoll": "122438001572839425",
+	"Juicysteak117": "112685077707665408",
+	"merger3": "143730443777343488",
+	"shomman": "166037812070580225",
+	"DerWaechter_": "193382989718093833",
+	"connlocks": "139462031894904832",
+	"venom_11": "174059362334146560",
+	"Sorglos": "166045025153581056",
+	"wotugondo": "385460099138715650",
+	"Watchful1": "95296130761371648",
+	"blankepitaph": "262708160790396928",
+	"Quantum027": "368589871092334612",
+	"imKaku": "120207112646164480",
+	"Unforgettable_": "177931363180085250",
+}
+
 
 class Queue:
 	def __init__(self, max_size):
@@ -162,7 +180,11 @@ while True:
 						wiki_page.edit(edited_sidebar)
 
 			if submission.approved and submission.link_flair_text is None and not posts_notified.contains(submission.id):
-				blame_string = f"u/{submission.approved_by} approved without adding a flair: <https://www.reddit.com{submission.permalink}>"
+				if submission.approved_by in MODERATORS:
+					user = f"<@{MODERATORS[submission.approved_by]}>"
+				else:
+					user = f"u/{submission.approved_by}"
+				blame_string = f"{user} approved without adding a flair: <https://www.reddit.com{submission.permalink}>"
 				log.info(f"Posting: {blame_string}")
 				posts_notified.put(submission.id)
 				if not debug:
