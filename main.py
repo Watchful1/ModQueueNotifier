@@ -57,7 +57,7 @@ c.execute('''
 		CreationDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		Unmod INTEGER NOT NULL,
 		Modqueue INTEGER NOT NULL,
-		Modmail INTEGER NOT NULL,
+		Modmail INTEGER NOT NULL
 	)
 ''')
 
