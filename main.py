@@ -161,7 +161,7 @@ while True:
 
 		sub = r.subreddit(SUBREDDIT)
 
-		allowed_reasons = ['#2 No Off-Topic or Low-effort Content', 'This is spam']
+		allowed_reasons = ['#2 No Off-Topic or Low-Value Content', 'This is spam']
 		for item in sub.mod.modqueue():
 			if item.approved:
 				approve = True
