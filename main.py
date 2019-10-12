@@ -10,16 +10,19 @@ import traceback
 import requests
 import math
 import re
+import sqlite3
+import discord_logging
 from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
+
+log = discord_logging.init_logging()
 
 SUBREDDIT = "CompetitiveOverwatch"
 USER_AGENT = "ModQueueNotifier (by /u/Watchful1)"
 LOOP_TIME = 2 * 60
 REDDIT_OWNER = "Watchful1"
 WEBHOOK = "https://discordapp.com/api/webhooks/{}/{}"
-LOG_LEVEL = logging.INFO
 
 
 THRESHOLDS = {
@@ -47,6 +50,39 @@ MODERATORS = {
 	"Unforgettable_": "177931363180085250",
 }
 
+dbConn = sqlite3.connect("database.db")
+c = dbConn.cursor()
+c.execute('''
+	CREATE TABLE IF NOT EXISTS stats (
+		CreationDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		Unmod INTEGER NOT NULL,
+		Modqueue INTEGER NOT NULL,
+		Modmail INTEGER NOT NULL,
+	)
+''')
+
+
+def add_stat(unmod, modqueue, modmail):
+	c = dbConn.cursor()
+	try:
+		c.execute('''
+			INSERT INTO stats
+			(Unmod, Modqueue, Modmail)
+			VALUES (?, ?, ?)
+		''', (unmod, modqueue, modmail))
+	except sqlite3.IntegrityError:
+		return False
+
+	dbConn.commit()
+	return True
+
+
+def signal_handler(signal, frame):
+	log.info("Handling interrupt")
+	dbConn.commit()
+	dbConn.close()
+	sys.exit(0)
+
 
 class Queue:
 	def __init__(self, max_size):
@@ -70,28 +106,6 @@ def check_threshold(bldr, level, key, string):
 	if level >= THRESHOLDS[key]['ping']:
 		return True
 	return False
-
-
-LOG_FOLDER_NAME = "logs"
-if not os.path.exists(LOG_FOLDER_NAME):
-	os.makedirs(LOG_FOLDER_NAME)
-LOG_FILENAME = LOG_FOLDER_NAME+"/"+"bot.log"
-LOG_FILE_BACKUPCOUNT = 5
-LOG_FILE_MAXSIZE = 1024 * 1024 * 16
-
-log = logging.getLogger("bot")
-log.setLevel(LOG_LEVEL)
-log_formatter = logging.Formatter('%(asctime)s - %(levelname)s: %(message)s')
-log_stderrHandler = logging.StreamHandler()
-log_stderrHandler.setFormatter(log_formatter)
-log.addHandler(log_stderrHandler)
-if LOG_FILENAME is not None:
-	log_fileHandler = logging.handlers.RotatingFileHandler(
-		LOG_FILENAME,
-		maxBytes=LOG_FILE_MAXSIZE,
-		backupCount=LOG_FILE_BACKUPCOUNT)
-	log_fileHandler.setFormatter(log_formatter)
-	log.addHandler(log_fileHandler)
 
 
 once = False
@@ -228,6 +242,7 @@ while True:
 		oldest_age = math.trunc(oldest_age.seconds / (60 * 60))
 
 		log.debug(f"Unmod: {unmod_count}, age: {oldest_age}, modqueue: {reported_count}, modmail: {mail_count}")
+		add_stat(unmod_count, reported_count, mail_count)
 
 		results = []
 		ping_here = False

@@ -5,8 +5,9 @@ name = "pypi"
 
 [packages]
 praw = "*"
+discord-logging = {git = "https://github.com/Watchful1/DiscordLogging.git"}
 
 [dev-packages]
 
 [requires]
-python_version = "3.6"
+python_version = "3.7"
