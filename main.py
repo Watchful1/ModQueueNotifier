@@ -193,7 +193,7 @@ while True:
 					if not debug:
 						wiki_page.edit(edited_sidebar)
 
-				if submission.discussion_type == 'CHAT' and submission.author.name not in ("Watchful1", "OWMatchThreads"):
+				if submission.discussion_type == 'CHAT' and submission.author.name not in ("OWMatchThreads"):
 					log.info(f"Removing live chat post: {submission.id} by u/{submission.author.name}")
 					comment = submission.reply("Don't post live chat threads")
 					comment.mod.distinguish(how="yes", sticky=True)
