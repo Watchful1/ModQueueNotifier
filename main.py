@@ -20,7 +20,7 @@ log = discord_logging.init_logging()
 
 SUBREDDIT = "CompetitiveOverwatch"
 USER_AGENT = "ModQueueNotifier (by /u/Watchful1)"
-LOOP_TIME = 2 * 60
+LOOP_TIME = 1 * 60
 REDDIT_OWNER = "Watchful1"
 WEBHOOK = "https://discordapp.com/api/webhooks/{}/{}"
 
@@ -193,12 +193,12 @@ while True:
 					if not debug:
 						wiki_page.edit(edited_sidebar)
 
-				if submission.discussion_type == 'CHAT' and submission.author.name not in ("OWMatchThreads"):
+				if submission.discussion_type == 'CHAT' and submission.author.name not in ("Watchful1", "OWMatchThreads"):
 					log.info(f"Removing live chat post: {submission.id} by u/{submission.author.name}")
 					comment = submission.reply("Don't post live chat threads")
 					comment.mod.distinguish(how="yes", sticky=True)
 					submission.mod.remove()
-					submission.lock()
+					submission.mod.lock()
 
 			if submission.approved and submission.link_flair_text is None and not posts_notified.contains(submission.id):
 				if submission.approved_by in MODERATORS:
