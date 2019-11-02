@@ -193,6 +193,12 @@ while True:
 					if not debug:
 						wiki_page.edit(edited_sidebar)
 
+				if submission.discussion_type == 'CHAT' and submission.author.name not in ("Watchful1", "OWMatchThreads"):
+					comment = submission.reply("Don't post live chat threads")
+					comment.mod.distinguish(how="yes", sticky=True)
+					submission.mod.remove()
+					submission.lock()
+
 			if submission.approved and submission.link_flair_text is None and not posts_notified.contains(submission.id):
 				if submission.approved_by in MODERATORS:
 					user = f"<@{MODERATORS[submission.approved_by]}>"
