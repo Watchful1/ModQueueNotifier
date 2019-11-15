@@ -137,19 +137,11 @@ except configparser.NoSectionError:
 	log.error("User "+user+" not in praw.ini, aborting")
 	sys.exit(0)
 
-if r.config.CONFIG.has_option(user, 'webhookid'):
-	WEBHOOK_ID = r.config.CONFIG[user]['webhookid']
+if r.config.CONFIG.has_option(user, 'webhook_redditmodtalk'):
+	WEBHOOK = r.config.CONFIG[user]['webhook_redditmodtalk']
 else:
-	log.error("Webhookid not in config, aborting")
+	log.error("webhook_redditmodtalk not in config, aborting")
 	sys.exit(0)
-
-if r.config.CONFIG.has_option(user, 'tokenid'):
-	TOKEN_ID = r.config.CONFIG[user]['tokenid']
-else:
-	log.error("Tokenid not in config, aborting")
-	sys.exit(0)
-
-WEBHOOK = WEBHOOK.format(WEBHOOK_ID, TOKEN_ID)
 
 log.info("Logged into reddit as /u/{}".format(str(r.user.me())))
 
