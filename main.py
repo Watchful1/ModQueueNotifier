@@ -48,6 +48,11 @@ MODERATORS = {
 	"Quantum027": "368589871092334612",
 	"imKaku": "120207112646164480",
 	"Unforgettable_": "177931363180085250",
+	"KarmaCollect": "196018859889786880",
+	"damnfinecoffee_": "308323435468029954",
+	"MagnarHD": "209762662681149440",
+	"ABCdropbear": "140284504702058497",
+	"Puck83821": "280862474914365440",
 }
 
 dbConn = sqlite3.connect("database.db")
