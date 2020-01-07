@@ -242,7 +242,7 @@ while True:
 					conversation.archive()
 			elif not conversation.is_highlighted:
 				mail_count += 1
-				modmail_age = datetime.strptime(conversation.last_updated, "%Y-%m-%dT%H:%M:%S.%f%z")
+				modmail_age = datetime.strptime(conversation.last_updated, "%Y-%m-%dT%H:%M:%S.%f+00:00")
 				if modmail_age < oldest_modmail:
 					oldest_modmail = modmail_age
 
