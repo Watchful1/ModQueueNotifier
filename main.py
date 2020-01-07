@@ -30,6 +30,7 @@ THRESHOLDS = {
 	'unmod_hours': {'post': 4, 'ping': 6},
 	'modqueue': {'post': 8, 'ping': 12},
 	'modmail': {'post': 5, 'ping': 8},
+	'modmail_hours': {'post': 12, 'ping': 24},
 }
 
 MODERATORS = {
@@ -208,11 +209,11 @@ while True:
 				if not debug:
 					requests.post(WEBHOOK, data={"content": blame_string})
 
-
 		unmod_count = 0
 		oldest_unmod = datetime.utcnow()
 		reported_count = 0
 		mail_count = 0
+		oldest_modmail = datetime.utcnow()
 		for submission in sub.mod.unmoderated():
 			unmod_count += 1
 			oldest_unmod = datetime.utcfromtimestamp(submission.created_utc)
@@ -239,21 +240,30 @@ while True:
 				if not debug:
 					conversation.reply(archive)
 					conversation.archive()
-			else:
+			elif not conversation.highlighted:
 				mail_count += 1
+				modmail_age = datetime.strptime(conversation.last_updated, "%Y-%m-%dT%H:%M:%S.%f%z")
+				if modmail_age < oldest_modmail:
+					oldest_modmail = modmail_age
 
-		oldest_age = datetime.utcnow() - oldest_unmod
-		oldest_age = math.trunc(oldest_age.seconds / (60 * 60))
+		oldest_unmod_hours = datetime.utcnow() - oldest_unmod
+		oldest_unmod_hours = math.trunc(oldest_unmod_hours.seconds / (60 * 60))
 
-		log.debug(f"Unmod: {unmod_count}, age: {oldest_age}, modqueue: {reported_count}, modmail: {mail_count}")
+		oldest_modmail_hours = datetime.utcnow() - oldest_modmail
+		oldest_modmail_hours = math.trunc(oldest_modmail_hours.seconds / (60 * 60))
+
+		log.debug(
+			f"Unmod: {unmod_count}, age: {oldest_unmod_hours}, modqueue: {reported_count}, modmail: {mail_count}"
+			f", modmail hours: {oldest_modmail_hours}")
 		add_stat(unmod_count, reported_count, mail_count)
 
 		results = []
 		ping_here = False
 		ping_here = check_threshold(results, unmod_count, 'unmod', f"Unmod: {unmod_count}") or ping_here
-		ping_here = check_threshold(results, oldest_age, 'unmod_hours', f"Oldest unmod in hours: {oldest_age}") or ping_here
+		ping_here = check_threshold(results, oldest_unmod_hours, 'unmod_hours', f"Oldest unmod in hours: {oldest_unmod_hours}") or ping_here
 		ping_here = check_threshold(results, reported_count, 'modqueue', f"Modqueue: {reported_count}") or ping_here
 		ping_here = check_threshold(results, mail_count, 'modmail', f"Modmail: {mail_count}") or ping_here
+		ping_here = check_threshold(results, oldest_modmail_hours, 'modmail_hours', f"Oldest modmail in hours: {oldest_modmail_hours}") or ping_here
 		count_string = ', '.join(results)
 		if ping_here:
 			count_string = "@here " + count_string
@@ -268,7 +278,7 @@ while True:
 			else:
 				has_posted = False
 		else:
-			if has_posted and (unmod_count == 0 and reported_count == 0 and mail_count <= 1):
+			if has_posted and (unmod_count == 0 and reported_count == 0 and mail_count == 0):
 				log.info("Queue clear, figuring out who cleared it")
 				mods = defaultdict(int)
 				for item in sub.mod.log(limit=40):
