@@ -389,6 +389,7 @@ while True:
 		log.warning("Hit an error in main loop")
 		log.warning(traceback.format_exc())
 
+	session.commit()
 	if once:
 		break
 
