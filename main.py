@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
+import prometheus_client
 import praw
-import os
 import logging.handlers
 import sys
 import configparser
@@ -10,13 +10,86 @@ import traceback
 import requests
 import math
 import re
-import sqlite3
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine, Column, String, DateTime
+from sqlalchemy.orm import sessionmaker
 import discord_logging
 from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
 
 log = discord_logging.init_logging()
+start_time = datetime.utcnow()
+
+
+def parse_modmail_datetime(datetime_string):
+	return datetime.strptime(datetime_string, "%Y-%m-%dT%H:%M:%S.%f+00:00")
+
+
+def conversation_is_unread(conversation):
+	return conversation.last_unread is not None and parse_modmail_datetime(conversation.last_unread) > \
+				parse_modmail_datetime(conversation.last_updated)
+
+
+def conversation_processed(conversation, processed_modmails):
+	last_replied = parse_modmail_datetime(conversation.last_updated)
+	return last_replied > start_time and (conversation.id not in processed_modmails or last_replied > processed_modmails[conversation.id])
+
+
+class Queue:
+	def __init__(self, max_size):
+		self.list = []
+		self.max_size = max_size
+		self.set = set()
+
+	def put(self, item):
+		if len(self.list) >= self.max_size:
+			self.list.pop(0)
+		self.list.append(item)
+		self.set.add(item)
+
+	def contains(self, item):
+		return item in self.set
+
+
+Base = declarative_base()
+
+
+class LogItem(Base):
+	__tablename__ = 'log'
+
+	id = Column(String(60), primary_key=True)
+	created = Column(DateTime, nullable=False)
+	mod = Column(String(60), nullable=False)
+	action = Column(String(80), nullable=False)
+	details = Column(String(80))
+	target_author = Column(String(80))
+	target_fullname = Column(String(20))
+	target_permalink = Column(String(160))
+	target_title = Column(String(300))
+	target_body = Column(String(300))
+	description = Column(String(300))
+
+	def __init__(self, log_item):
+		self.id = log_item.id
+		self.created = datetime.utcfromtimestamp(log_item.created_utc)
+		self.mod = log_item.mod.name
+		self.action = log_item.action
+		self.details = log_item.details
+		self.target_author = log_item.target_author if log_item.target_author else None
+		self.target_fullname = log_item.target_fullname
+		self.target_permalink = log_item.target_permalink
+		self.target_title = log_item.target_title
+		self.target_body = log_item.target_body
+		self.description = log_item.description
+
+
+engine = create_engine(f'sqlite:///database.db')
+Session = sessionmaker(bind=engine)
+session = Session()
+Base.metadata.create_all(engine)
+session.commit()
+
 
 SUBREDDIT = "CompetitiveOverwatch"
 USER_AGENT = "ModQueueNotifier (by /u/Watchful1)"
@@ -34,16 +107,10 @@ THRESHOLDS = {
 }
 
 MODERATORS = {
-	"ExcitablePancake": "123149791864684545",
-	"Jawoll": "122438001572839425",
-	"Juicysteak117": "112685077707665408",
 	"merger3": "143730443777343488",
-	"shomman": "166037812070580225",
 	"DerWaechter_": "193382989718093833",
 	"connlocks": "139462031894904832",
-	"venom_11": "174059362334146560",
 	"Sorglos": "166045025153581056",
-	"wotugondo": "385460099138715650",
 	"Watchful1": "95296130761371648",
 	"blankepitaph": "262708160790396928",
 	"Quantum027": "368589871092334612",
@@ -52,58 +119,28 @@ MODERATORS = {
 	"KarmaCollect": "196018859889786880",
 	"damnfinecoffee_": "308323435468029954",
 	"MagnarHD": "209762662681149440",
+	"wotugondo": "385460099138715650",
+	"timberflynn": "195955430734823424",
+	"Kralz": "172415421561962496",
+	"ModWilliam": "321107093773877257",
+	"Blaiidds": "204445334255042560",
+	"DatGameGuy": "132969627050311680",
+
+	"ExcitablePancake": "123149791864684545",
+	"Jawoll": "122438001572839425",
+	"Juicysteak117": "112685077707665408",
+	"shomman": "166037812070580225",
+	"venom_11": "174059362334146560",
 	"ABCdropbear": "140284504702058497",
 	"Puck83821": "280862474914365440",
 }
 
-dbConn = sqlite3.connect("database.db")
-c = dbConn.cursor()
-c.execute('''
-	CREATE TABLE IF NOT EXISTS stats (
-		CreationDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-		Unmod INTEGER NOT NULL,
-		Modqueue INTEGER NOT NULL,
-		Modmail INTEGER NOT NULL
-	)
-''')
-
-
-def add_stat(unmod, modqueue, modmail):
-	c = dbConn.cursor()
-	try:
-		c.execute('''
-			INSERT INTO stats
-			(Unmod, Modqueue, Modmail)
-			VALUES (?, ?, ?)
-		''', (unmod, modqueue, modmail))
-	except sqlite3.IntegrityError:
-		return False
-
-	dbConn.commit()
-	return True
-
 
 def signal_handler(signal, frame):
 	log.info("Handling interrupt")
-	dbConn.commit()
-	dbConn.close()
+	session.commit()
+	engine.dispose()
 	sys.exit(0)
-
-
-class Queue:
-	def __init__(self, max_size):
-		self.list = []
-		self.max_size = max_size
-		self.set = set()
-
-	def put(self, item):
-		if len(self.list) >= self.max_size:
-			self.list.pop(0)
-		self.list.append(item)
-		self.set.add(item)
-
-	def contains(self, item):
-		return item in self.set
 
 
 def check_threshold(bldr, level, key, string):
@@ -130,6 +167,9 @@ else:
 	sys.exit(0)
 
 
+discord_logging.init_discord_logging(user, logging.WARNING, 1)
+
+
 try:
 	r = praw.Reddit(
 		user
@@ -146,18 +186,34 @@ else:
 
 log.info("Logged into reddit as /u/{}".format(str(r.user.me())))
 
+prometheus_client.start_http_server(8003)
+prom_mod_actions = prometheus_client.Counter("bot_mod_actions", "Mod actions by moderator", ['moderator'])
+prom_queue_size = prometheus_client.Gauge("bot_queue_size", "Queue size", ['type'])
+
 last_posted = None
 post_checked = datetime.utcnow()
 posts_notified = Queue(50)
 has_posted = False
+modmails = {}
 
+sub = r.subreddit(SUBREDDIT)
 
 while True:
 	try:
 		startTime = time.perf_counter()
 		log.debug("Starting run")
 
-		sub = r.subreddit(SUBREDDIT)
+		for log_item in sub.mod.log(limit=None):
+			if session.query(LogItem).filter_by(id=log_item.id).count() > 0:
+				break
+
+			prom_mod_actions.labels(moderator=log_item.mod).inc()
+
+			if log_item.action == "banuser" and log_item.details == "permanent":
+				log.warning(
+					f"User permabanned by u/{log_item.mod}: https://www.reddit.com/user/{log_item.target_author}")
+
+			session.merge(LogItem(log_item))
 
 		allowed_reasons = ['#2 No Off-Topic or Low-Value Content', 'This is spam']
 		for item in sub.mod.modqueue():
@@ -219,6 +275,26 @@ while True:
 			oldest_unmod = datetime.utcfromtimestamp(submission.created_utc)
 		for thing in sub.mod.modqueue():
 			reported_count += 1
+
+		# log when there's a reply to a highlighted modmail
+		for conversation in sub.modmail.conversations(limit=10, state='all'):
+			if conversation_is_unread(conversation) and conversation.is_highlighted:
+				if conversation_processed(conversation, modmails):
+					log.warning(
+						f"Highlighted modmail has a new reply: https://mod.reddit.com/mail/all/{conversation.id}")
+					modmails[conversation.id] = parse_modmail_datetime(conversation.last_updated)
+
+		# log when a modmail is archived without a response
+		for conversation in sub.modmail.conversations(limit=10, state='archived'):
+			if conversation.last_user_update is not None and parse_modmail_datetime(
+					conversation.last_updated) > start_time and \
+					parse_modmail_datetime(conversation.last_mod_update) < parse_modmail_datetime(
+				conversation.last_user_update) and \
+					conversation_processed(conversation, modmails):
+				log.warning(
+					f"Modmail archived without reply: https://mod.reddit.com/mail/arvhiced/{conversation.id}")
+				modmails[conversation.id] = parse_modmail_datetime(conversation.last_updated)
+
 		for conversation in sub.modmail.conversations(state='all'):
 			archive = None
 			if len(conversation.authors) == 1 and \
@@ -255,7 +331,11 @@ while True:
 		log.debug(
 			f"Unmod: {unmod_count}, age: {oldest_unmod_hours}, modqueue: {reported_count}, modmail: {mail_count}"
 			f", modmail hours: {oldest_modmail_hours}")
-		add_stat(unmod_count, reported_count, mail_count)
+		prom_queue_size.labels(type='unmod').set(unmod_count)
+		prom_queue_size.labels(type='unmod_hours').set(oldest_unmod_hours)
+		prom_queue_size.labels(type='modqueue').set(reported_count)
+		prom_queue_size.labels(type='modmail').set(mail_count)
+		prom_queue_size.labels(type='modmail_hours').set(oldest_modmail_hours)
 
 		results = []
 		ping_here = False
@@ -281,14 +361,18 @@ while True:
 			if has_posted and (unmod_count == 0 and reported_count == 0 and mail_count == 0):
 				log.info("Queue clear, figuring out who cleared it")
 				mods = defaultdict(int)
-				for item in sub.mod.log(limit=40):
+				for item in sub.mod.log(limit=100):
 					minutes_old = (datetime.utcnow() - datetime.utcfromtimestamp(item.created_utc)).seconds / 60
-					if minutes_old < 120:
+					if item.mod not in ("OWMatchThreads", "AutoModerator"):
 						mods[item.mod] += 1
+					if minutes_old > 40:
+						break
 				mod_clear = None
+				mod_count = 2
 				for mod in mods:
-					if mods[mod] > 20:
+					if mods[mod] > mod_count:
 						mod_clear = mod
+						mod_count = mods[mod]
 
 				if mod_clear is not None:
 					clear_string = f"{mod_clear} cleared the queues!"

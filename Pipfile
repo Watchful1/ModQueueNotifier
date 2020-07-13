@@ -6,6 +6,8 @@ name = "pypi"
 [packages]
 praw = "*"
 discord-logging = {git = "https://github.com/Watchful1/DiscordLogging.git"}
+prometheus-client = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 
