@@ -214,7 +214,6 @@ while True:
 					f"User permabanned by u/{log_item.mod}: https://www.reddit.com/user/{log_item.target_author}")
 
 			session.merge(LogItem(log_item))
-			log.warning(f"New log item: {log_item.mod}")
 
 		allowed_reasons = ['#2 No Off-Topic or Low-Value Content', 'This is spam']
 		for item in sub.mod.modqueue():
