@@ -286,11 +286,12 @@ while True:
 
 		# log when a modmail is archived without a response
 		for conversation in sub.modmail.conversations(limit=10, state='archived'):
-			if conversation.last_user_update is not None and parse_modmail_datetime(
-					conversation.last_updated) > start_time and \
-					parse_modmail_datetime(conversation.last_mod_update) < parse_modmail_datetime(
-				conversation.last_user_update) and \
-					conversation_processed(conversation, modmails):
+			if conversation.last_user_update is not None and (conversation.last_mod_update is None or
+					(parse_modmail_datetime(conversation.last_updated) > start_time and \
+						parse_modmail_datetime(conversation.last_mod_update) <
+						parse_modmail_datetime(conversation.last_user_update) and \
+						conversation_processed(conversation, modmails))
+					):
 				log.warning(
 					f"Modmail archived without reply: https://mod.reddit.com/mail/arvhiced/{conversation.id}")
 				modmails[conversation.id] = parse_modmail_datetime(conversation.last_updated)
@@ -390,6 +391,7 @@ while True:
 		log.warning(traceback.format_exc())
 
 	session.commit()
+	discord_logging.flush_discord()
 	if once:
 		break
 
