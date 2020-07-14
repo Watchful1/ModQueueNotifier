@@ -31,7 +31,7 @@ def conversation_is_unread(conversation):
 				parse_modmail_datetime(conversation.last_updated)
 
 
-def conversation_processed(conversation, processed_modmails):
+def conversation_not_processed(conversation, processed_modmails):
 	last_replied = parse_modmail_datetime(conversation.last_updated)
 	return last_replied > start_time and (conversation.id not in processed_modmails or last_replied > processed_modmails[conversation.id])
 
@@ -279,19 +279,16 @@ while True:
 		# log when there's a reply to a highlighted modmail
 		for conversation in sub.modmail.conversations(limit=10, state='all'):
 			if conversation_is_unread(conversation) and conversation.is_highlighted:
-				if conversation_processed(conversation, modmails):
+				if conversation_not_processed(conversation, modmails):
 					log.warning(
 						f"Highlighted modmail has a new reply: https://mod.reddit.com/mail/all/{conversation.id}")
 					modmails[conversation.id] = parse_modmail_datetime(conversation.last_updated)
 
 		# log when a modmail is archived without a response
 		for conversation in sub.modmail.conversations(limit=10, state='archived'):
-			if conversation.last_user_update is not None and (conversation.last_mod_update is None or
-					(parse_modmail_datetime(conversation.last_updated) > start_time and \
-						parse_modmail_datetime(conversation.last_mod_update) <
-						parse_modmail_datetime(conversation.last_user_update) and \
-						conversation_processed(conversation, modmails))
-					):
+			if conversation.last_user_update is not None and \
+					(conversation.last_mod_update is None or parse_modmail_datetime(conversation.last_mod_update) < parse_modmail_datetime(conversation.last_user_update)) and \
+					conversation_not_processed(conversation, modmails):
 				log.warning(
 					f"Modmail archived without reply: https://mod.reddit.com/mail/arvhiced/{conversation.id}")
 				modmails[conversation.id] = parse_modmail_datetime(conversation.last_updated)
