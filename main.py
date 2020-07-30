@@ -293,7 +293,9 @@ while True:
 					f"Modmail archived without reply: https://mod.reddit.com/mail/arvhiced/{conversation.id}")
 				modmails[conversation.id] = parse_modmail_datetime(conversation.last_updated)
 
-		for conversation in sub.modmail.conversations(state='all'):
+		conversations = list(sub.modmail.conversations(state='all'))
+		conversations.extend(list(sub.modmail.conversations(state='appeals')))
+		for conversation in conversations:
 			archive = None
 			if len(conversation.authors) == 1 and \
 					conversation.authors[0].name == "AutoModerator" and \
