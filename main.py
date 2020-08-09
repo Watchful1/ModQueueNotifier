@@ -271,7 +271,7 @@ while True:
 
 			if post_log_item:
 				log.warning(
-					f"Mod action by u/{log_item.mod}: {log_item.action}{' '.join(warning_items)}")
+					f"{warning_type}:Mod action by u/{log_item.mod}: {log_item.action}{' '.join(warning_items)}")
 
 			session.merge(LogItem(log_item))
 
