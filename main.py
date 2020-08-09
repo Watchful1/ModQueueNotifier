@@ -164,7 +164,7 @@ KNOWN_LOG_TYPES = {
 WARNING_LOG_TYPES = {
 	"banuser": {"details": "permanent", "print": ["target_author"]},
 	'unbanuser': {"description": "!was temporary"},
-	'editflair': {"mod": "!OWMatchThreads"},
+	'editflair': {"mod": "!OWMatchThreads", "target_title": "!"},
 	'wikirevise': {"mod": "!OWMatchThreads"},
 }
 
@@ -242,12 +242,10 @@ while True:
 
 			prom_mod_actions.labels(moderator=log_item.mod).inc()
 
-			post_log_item = False
 			warning_type = None
 			warning_items = []
 			if log_item.mod not in MODERATORS:
 				warning_type = "1"
-				post_log_item = True
 			elif log_item.action in WARNING_LOG_TYPES:
 				sub_filters = WARNING_LOG_TYPES[log_item.action]
 				for item, value in sub_filters.items():
@@ -256,20 +254,26 @@ while True:
 						for field_name in value:
 							warning_items.append(getattr(log_item, field_name))
 					if value.startswith("!"):
-						if log_item_value != value[1:]:
-							post_log_item = True
+						if value == "!":
+							if log_item_value is None:
+								warning_type = "5"
+							else:
+								warning_type = None
+								break
+						elif log_item_value != value[1:]:
 							warning_type = "4"
+						else:
+							warning_type = None
+							break
 					elif log_item_value == value:
-						post_log_item = True
 						warning_type = "3"
 					else:
-						post_log_item = False
+						warning_type = None
 						break
 			elif log_item.action not in KNOWN_LOG_TYPES:
 				warning_type = "2"
-				post_log_item = True
 
-			if post_log_item:
+			if warning_type is not None:
 				log.warning(
 					f"{warning_type}:Mod action by u/{log_item.mod}: {log_item.action}{' '.join(warning_items)}")
 
