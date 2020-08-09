@@ -135,6 +135,78 @@ MODERATORS = {
 	"Puck83821": "280862474914365440",
 }
 
+KNOWN_LOG_TYPES = {
+	'spamlink',
+	'removelink',
+	'approvelink',
+	'spamcomment',
+	'removecomment',
+	'approvecomment',
+	'showcomment',
+	'distinguish',
+	'marknsfw',
+	'ignorereports',
+	'unignorereports',
+	'setsuggestedsort',
+	'sticky',
+	'unsticky',
+	'setcontestmode',
+	'unsetcontestmode',
+	'lock',
+	'unlock',
+	'spoiler',
+	'unspoiler',
+	'modmail_enrollment',
+	'markoriginalcontent',
+}
+
+WARNING_LOG_TYPES = {
+	"banuser": {"details": "permanent", "print": ["target_author"]},
+	'unbanuser': {},
+	'addmoderator': {},
+	'invitemoderator': {},
+	'uninvitemoderator': {},
+	'acceptmoderatorinvite': {},
+	'removemoderator': {},
+	'addcontributor': {},
+	'removecontributor': {},
+	'editsettings': {},
+	'editflair': {},
+	'wikibanned': {},
+	'wikicontributor': {},
+	'wikiunbanned': {},
+	'wikipagelisted': {},
+	'removewikicontributor': {},
+	'wikirevise': {},
+	'wikipermlevel': {},
+	'setpermissions': {},
+	'muteuser': {},
+	'unmuteuser': {},
+	'createrule': {},
+	'editrule': {},
+	'reorderrules': {},
+	'deleterule': {},
+	'community_styling': {},
+	'community_widgets': {},
+	'collections': {},
+	'events': {},
+	'create_award': {},
+	'disable_award': {},
+	'delete_award': {},
+	'enable_award': {},
+	'mod_award_given': {},
+	'hidden_award': {},
+	'add_community_topics': {},
+	'remove_community_topics': {},
+	'create_scheduled_post': {},
+	'edit_scheduled_post': {},
+	'delete_scheduled_post': {},
+	'submit_scheduled_post': {},
+	'edit_post_requirements': {},
+	'invitesubscriber': {},
+	'submit_content_rating_survey': {},
+}
+
 
 def signal_handler(signal, frame):
 	log.info("Handling interrupt")
@@ -209,9 +281,33 @@ while True:
 
 			prom_mod_actions.labels(moderator=log_item.mod).inc()
 
-			if log_item.action == "banuser" and log_item.details == "permanent":
-				log.warning(
-					f"User permabanned by u/{log_item.mod}: https://www.reddit.com/user/{log_item.target_author}")
+			if log_item.action in WARNING_LOG_TYPES or log_item.action not in KNOWN_LOG_TYPES:
+				sub_filters = WARNING_LOG_TYPES[log_item.action]
+				post_log_item = False
+				warning_items = []
+				if log_item.mod not in MODERATORS:
+					post_log_item = True
+				elif not len(sub_filters):
+					post_log_item = True
+				else:
+					for item, value in sub_filters.items():
+						log_item_value = getattr(log_item, item)
+						if item == "print":
+							for field_name in value:
+								warning_items.append(getattr(log_item, field_name))
+						if value.startswith("!"):
+							if log_item_value != value[1:]:
+								post_log_item = True
+						elif log_item_value == value:
+							post_log_item = True
+						else:
+							post_log_item = False
+							break
+
+				if post_log_item:
+					log.warning(
+						f"Mod action by u/{log_item.mod}: {log_item.action}"
+						f"{(' '.join(warning_items) if len(warning_items) else '')}")
 
 			session.merge(LogItem(log_item))
 
