@@ -178,7 +178,7 @@ WARNING_LOG_TYPES = {
 	'wikiunbanned': {},
 	'wikipagelisted': {},
 	'removewikicontributor': {},
-	'wikirevise': {},
+	'wikirevise': {"mod": "!OWMatchThreads"},
 	'wikipermlevel': {},
 	'setpermissions': {},
 	'muteuser': {},
