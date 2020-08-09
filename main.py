@@ -125,6 +125,7 @@ MODERATORS = {
 	"ModWilliam": "321107093773877257",
 	"Blaiidds": "204445334255042560",
 	"DatGameGuy": "132969627050311680",
+	"OWMatchThreads": "OWMatchThreads",
 
 	"ExcitablePancake": "123149791864684545",
 	"Jawoll": "122438001572839425",
