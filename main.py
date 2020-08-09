@@ -240,11 +240,11 @@ while True:
 			if session.query(LogItem).filter_by(id=log_item.id).count() > 0:
 				break
 
-			prom_mod_actions.labels(moderator=log_item.mod).inc()
+			prom_mod_actions.labels(moderator=log_item.mod.name).inc()
 
 			warning_type = None
 			warning_items = []
-			if log_item.mod not in MODERATORS:
+			if log_item.mod.name not in MODERATORS:
 				warning_type = "1"
 			elif log_item.action in WARNING_LOG_TYPES:
 				sub_filters = WARNING_LOG_TYPES[log_item.action]
@@ -275,7 +275,7 @@ while True:
 
 			if warning_type is not None:
 				log.warning(
-					f"{warning_type}:Mod action by u/{log_item.mod}: {log_item.action}{' '.join(warning_items)}")
+					f"{warning_type}:Mod action by u/{log_item.mod.name}: {log_item.action}{' '.join(warning_items)}")
 
 			session.merge(LogItem(log_item))
 
