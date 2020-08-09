@@ -171,7 +171,7 @@ WARNING_LOG_TYPES = {
 	'addcontributor': {},
 	'removecontributor': {},
 	'editsettings': {},
-	'editflair': {},
+	'editflair': {"mod": "!OWMatchThreads"},
 	'wikibanned': {},
 	'wikicontributor': {},
 	'wikiunbanned': {},
