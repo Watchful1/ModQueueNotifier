@@ -163,49 +163,9 @@ KNOWN_LOG_TYPES = {
 
 WARNING_LOG_TYPES = {
 	"banuser": {"details": "permanent", "print": ["target_author"]},
-	'unbanuser': {},
-	'addmoderator': {},
-	'invitemoderator': {},
-	'uninvitemoderator': {},
-	'acceptmoderatorinvite': {},
-	'removemoderator': {},
-	'addcontributor': {},
-	'removecontributor': {},
-	'editsettings': {},
+	'unbanuser': {"description": "!was temporary"},
 	'editflair': {"mod": "!OWMatchThreads"},
-	'wikibanned': {},
-	'wikicontributor': {},
-	'wikiunbanned': {},
-	'wikipagelisted': {},
-	'removewikicontributor': {},
 	'wikirevise': {"mod": "!OWMatchThreads"},
-	'wikipermlevel': {},
-	'setpermissions': {},
-	'muteuser': {},
-	'unmuteuser': {},
-	'createrule': {},
-	'editrule': {},
-	'reorderrules': {},
-	'deleterule': {},
-	'community_styling': {},
-	'community_widgets': {},
-	'collections': {},
-	'events': {},
-	'create_award': {},
-	'disable_award': {},
-	'delete_award': {},
-	'enable_award': {},
-	'mod_award_given': {},
-	'hidden_award': {},
-	'add_community_topics': {},
-	'remove_community_topics': {},
-	'create_scheduled_post': {},
-	'edit_scheduled_post': {},
-	'delete_scheduled_post': {},
-	'submit_scheduled_post': {},
-	'edit_post_requirements': {},
-	'invitesubscriber': {},
-	'submit_content_rating_survey': {},
 }
 
 
@@ -282,33 +242,36 @@ while True:
 
 			prom_mod_actions.labels(moderator=log_item.mod).inc()
 
-			if log_item.action in WARNING_LOG_TYPES or log_item.action not in KNOWN_LOG_TYPES:
+			post_log_item = False
+			warning_type = None
+			warning_items = []
+			if log_item.mod not in MODERATORS:
+				warning_type = "1"
+				post_log_item = True
+			elif log_item.action in WARNING_LOG_TYPES:
 				sub_filters = WARNING_LOG_TYPES[log_item.action]
-				post_log_item = False
-				warning_items = []
-				if log_item.mod not in MODERATORS:
-					post_log_item = True
-				elif not len(sub_filters):
-					post_log_item = True
-				else:
-					for item, value in sub_filters.items():
-						log_item_value = getattr(log_item, item)
-						if item == "print":
-							for field_name in value:
-								warning_items.append(getattr(log_item, field_name))
-						if value.startswith("!"):
-							if log_item_value != value[1:]:
-								post_log_item = True
-						elif log_item_value == value:
+				for item, value in sub_filters.items():
+					log_item_value = getattr(log_item, item)
+					if item == "print":
+						for field_name in value:
+							warning_items.append(getattr(log_item, field_name))
+					if value.startswith("!"):
+						if log_item_value != value[1:]:
 							post_log_item = True
-						else:
-							post_log_item = False
-							break
+							warning_type = "4"
+					elif log_item_value == value:
+						post_log_item = True
+						warning_type = "3"
+					else:
+						post_log_item = False
+						break
+			elif log_item.action not in KNOWN_LOG_TYPES:
+				warning_type = "2"
+				post_log_item = True
 
-				if post_log_item:
-					log.warning(
-						f"Mod action by u/{log_item.mod}: {log_item.action}"
-						f"{(' '.join(warning_items) if len(warning_items) else '')}")
+			if post_log_item:
+				log.warning(
+					f"Mod action by u/{log_item.mod}: {log_item.action}{' '.join(warning_items)}")
 
 			session.merge(LogItem(log_item))
 
