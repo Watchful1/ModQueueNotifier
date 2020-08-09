@@ -166,7 +166,7 @@ WARNING_LOG_TYPES = {
 	"banuser": {"details": "permanent", "print": ["target_author"]},
 	'unbanuser': {"description": "!was temporary"},
 	'editflair': {"mod": "!OWMatchThreads", "target_title": "!"},
-	'wikirevise': {"mod": "!OWMatchThreads"},
+	'wikirevise': {"mod": "!OWMatchThreads", "details": "!Page usernotes edited"},
 }
 
 
