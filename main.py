@@ -250,10 +250,11 @@ while True:
 			elif log_item.action in WARNING_LOG_TYPES:
 				sub_filters = WARNING_LOG_TYPES[log_item.action]
 				for item, value in sub_filters.items():
-					log_item_value = getattr(log_item, item)
 					if item == "print":
 						for field_name in value:
 							warning_items.append(getattr(log_item, field_name))
+						continue
+					log_item_value = getattr(log_item, item)
 					if value.startswith("!"):
 						if value == "!":
 							if log_item_value is None:
