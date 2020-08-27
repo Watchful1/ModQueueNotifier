@@ -97,7 +97,7 @@ def add_usernote(sub, user, mod_name, type, note_text, permalink):
 		'w': warning_index
 	}
 	if user.name in notes:
-		notes[user.name]['ns'].append(note)
+		notes[user.name]['ns'].insert(0, note)
 	else:
 		notes[user.name] = {'ns': [note]}
 
