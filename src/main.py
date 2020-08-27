@@ -49,6 +49,7 @@ if __name__ == "__main__":
 		discord_logging.set_level(logging.DEBUG)
 
 	discord_logging.init_discord_logging(args.user, logging.WARNING, 1)
+	database.init()
 
 	try:
 		r = praw.Reddit(args.user, user_agent=static.USER_AGENT)
