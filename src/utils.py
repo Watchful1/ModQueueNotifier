@@ -32,13 +32,22 @@ def conversation_not_processed(conversation, processed_modmails, start_time):
 
 
 def get_usernotes(sub):
-	wikipage = sub.wiki['usernotes']
-	json_data = json.loads(wikipage.content_md)
+	wiki_page = sub.wiki['usernotes']
+	json_data = json.loads(wiki_page.content_md)
 	blob = json_data["blob"]
 	decoded = base64.b64decode(blob)
 	raw = zlib.decompress(decoded)
 	parsed = json.loads(raw)
 	return json_data, parsed
+
+
+def save_usernotes(sub, notes_json, notes):
+	blob = json.dumps(notes).encode()
+	compressed_blob = zlib.compress(blob)
+	encoded_blob = base64.b64encode(compressed_blob).decode()
+	notes_json['blob'] = str(encoded_blob)
+	wiki_page = sub.wiki['usernotes']
+	wiki_page.edit(json.dumps(notes_json))
 
 
 def add_usernote(sub, user, mod_name, type, note_text, permalink):
