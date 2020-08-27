@@ -31,12 +31,13 @@ def conversation_not_processed(conversation, processed_modmails, start_time):
 	return last_replied > start_time and (conversation.id not in processed_modmails or last_replied > processed_modmails[conversation.id])
 
 
-def recursive_remove_comments(comment, count_removed=0):
+def recursive_remove_comments(comment, count_removed=1):
 	comment.refresh()
 	for child_comment in comment.replies:
 		count_removed = recursive_remove_comments(child_comment, count_removed)
 		child_comment.mod.remove()
 		count_removed += 1
+	comment.mod.remove()
 	return count_removed
 
 
