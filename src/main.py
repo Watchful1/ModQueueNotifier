@@ -147,7 +147,10 @@ if __name__ == "__main__":
 									pass
 
 							utils.warn_ban_user(item.author, mod_name, sub, days, item.permalink)
-							item.mod.remove()
+							count_removed = utils.recursive_remove_comments(item)
+							if count_removed > 1:
+								log.info(f"Recursively removed {count_removed} comments")
+							# archive modmail
 
 			for submission in sub.new(limit=25):
 				processed = False

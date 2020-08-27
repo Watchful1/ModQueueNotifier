@@ -31,6 +31,15 @@ def conversation_not_processed(conversation, processed_modmails, start_time):
 	return last_replied > start_time and (conversation.id not in processed_modmails or last_replied > processed_modmails[conversation.id])
 
 
+def recursive_remove_comments(comment, count_removed=0):
+	comment.refresh()
+	for child_comment in comment.replies:
+		count_removed = recursive_remove_comments(child_comment, count_removed)
+		child_comment.mod.remove()
+		count_removed += 1
+	return count_removed
+
+
 def get_usernotes(sub):
 	wiki_page = sub.wiki['usernotes']
 	json_data = json.loads(wiki_page.content_md)
@@ -41,13 +50,13 @@ def get_usernotes(sub):
 	return json_data, parsed
 
 
-def save_usernotes(sub, notes_json, notes):
+def save_usernotes(sub, notes_json, notes, user):
 	blob = json.dumps(notes).encode()
 	compressed_blob = zlib.compress(blob)
 	encoded_blob = base64.b64encode(compressed_blob).decode()
 	notes_json['blob'] = str(encoded_blob)
 	wiki_page = sub.wiki['usernotes']
-	wiki_page.edit(json.dumps(notes_json))
+	wiki_page.edit(json.dumps(notes_json), reason=f"\"create new note on user {user}\" via OWMatchThreads")
 
 
 def add_usernote(sub, user, mod_name, type, note_text, permalink):
@@ -87,20 +96,20 @@ def add_usernote(sub, user, mod_name, type, note_text, permalink):
 		'w': warning_index
 	}
 	if user.name in notes_json:
-		notes_json[user.name]['ns'].append(note)
+		notes[user.name]['ns'].append(note)
 	else:
-		notes_json[user.name] = {'ns': [note]}
+		notes[user.name] = {'ns': [note]}
 
-	save_usernotes(sub, notes_json, notes)
+	save_usernotes(sub, notes_json, notes, user)
 
 
 def warn_ban_user(user, mod_name, subreddit, days_ban, permalink):
 	if days_ban is None:
-		log.info(f"Warning user, rule 1 from u/{mod_name}")
+		log.info(f"Warning u/{user.name}, rule 1 from u/{mod_name}")
 		user.message("Rule 1 warning", f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}", from_subreddit=subreddit.display_name)
 		add_usernote(subreddit, user, mod_name, "abusewarn", "abusive comment", permalink)
 	else:
-		log.info(f"Banning user for {days_ban}, rule 1 from u/{mod_name}")
+		log.info(f"Banning u/{user.name} for {days_ban}, rule 1 from u/{mod_name}")
 		subreddit.banned.add(user, ban_reason="abusive commment", ban_message=f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}")
 		add_usernote(subreddit, user, mod_name, "ban", f"{days_ban}d - abusive comment", permalink)
 
