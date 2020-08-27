@@ -134,6 +134,20 @@ if __name__ == "__main__":
 						log.info(f"Reapproving item: {item.id}")
 						item.mod.approve()
 
+				if item.fullname.startswith("t1_") and len(item.mod_reports):
+					for report_reason, mod_name in item.mod_reports:
+						items = report_reason.split(" ")
+						if items[0].lower() == "r1":
+							days = None
+							if len(items) > 1:
+								try:
+									days = int(items[1])
+								except ValueError:
+									pass
+
+							utils.warn_ban_user(item.author, mod_name, sub, days, item.permalink)
+							item.mod.remove()
+
 			for submission in sub.new(limit=25):
 				processed = False
 				if datetime.utcfromtimestamp(submission.created_utc) <= post_checked:
