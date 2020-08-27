@@ -96,7 +96,7 @@ def add_usernote(sub, user, mod_name, type, note_text, permalink):
 		'l': link,
 		'w': warning_index
 	}
-	if user.name in notes_json:
+	if user.name in notes:
 		notes[user.name]['ns'].append(note)
 	else:
 		notes[user.name] = {'ns': [note]}
