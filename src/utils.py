@@ -91,6 +91,8 @@ def add_usernote(sub, user, mod_name, type, note_text, permalink):
 	else:
 		notes_json[user.name] = {'ns': [note]}
 
+	save_usernotes(sub, notes_json, notes)
+
 
 def warn_ban_user(user, mod_name, subreddit, days_ban, permalink):
 	if days_ban is None:
