@@ -118,7 +118,7 @@ if __name__ == "__main__":
 
 				if warning_type is not None:
 					log.warning(
-						f"{warning_type}:Mod action by u/{log_item.mod.name}: {log_item.action}{' '.join(warning_items)}")
+						f"{warning_type}:Mod action by u/{log_item.mod.name}: {log_item.action} {' '.join(warning_items)}")
 
 				database.session.merge(LogItem(log_item))
 

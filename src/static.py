@@ -71,7 +71,7 @@ KNOWN_LOG_TYPES = {
 }
 
 WARNING_LOG_TYPES = {
-	"banuser": {"details": "permanent", "print": ["target_author"]},
+	"banuser": {"details": "permanent", "print": ["target_author", "details"]},
 	'unbanuser': {"description": "!was temporary"},
 	'editflair': {"mod": "!OWMatchThreads", "target_title": "!"},
 	'wikirevise': {"mod": "!OWMatchThreads", "details": "!Page usernotes edited"},

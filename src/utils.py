@@ -110,8 +110,8 @@ def warn_ban_user(user, mod_name, subreddit, days_ban, permalink):
 		user.message("Rule 1 warning", f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}\n\nFrom u/{mod_name}", from_subreddit=subreddit.display_name)
 		add_usernote(subreddit, user, mod_name, "abusewarn", "abusive comment", permalink)
 	else:
-		log.info(f"Banning u/{user.name} for {days_ban}, rule 1 from u/{mod_name}")
-		subreddit.banned.add(user, ban_reason="abusive commment", ban_message=f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}\n\nFrom u/{mod_name}")
+		log.info(f"Banning u/{user.name} for {days_ban} days, rule 1 from u/{mod_name}")
+		subreddit.banned.add(user, duration=days_ban, ban_reason="abusive commment", ban_message=f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}\n\nFrom u/{mod_name}")
 		add_usernote(subreddit, user, mod_name, "ban", f"{days_ban}d - abusive comment", permalink)
 
 
