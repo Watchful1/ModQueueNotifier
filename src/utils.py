@@ -70,7 +70,7 @@ def add_usernote(sub, user, mod_name, type, note_text, permalink):
 		log.warning(f"Unable to find mod index for: {mod_name}")
 		return
 
-	groups = re.search(r'(?:comments/)(\w{3,8})(?:/_/)(\w{3,8})', permalink, flags=re.IGNORECASE)
+	groups = re.search(r'(?:comments/)(\w{3,8})(?:/.+/)(\w{3,8})', permalink, flags=re.IGNORECASE)
 	if not groups:
 		log.warning(f"Unable to extract ids from: {permalink}")
 		return
@@ -94,9 +94,11 @@ def add_usernote(sub, user, mod_name, type, note_text, permalink):
 
 def warn_ban_user(user, mod_name, subreddit, days_ban, permalink):
 	if days_ban is None:
+		log.info(f"Warning user, rule 1 from u/{mod_name}")
 		user.message("Rule 1 warning", f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}", from_subreddit=subreddit.display_name)
 		add_usernote(subreddit, user, mod_name, "abusewarn", "abusive comment", permalink)
 	else:
+		log.info(f"Banning user for {days_ban}, rule 1 from u/{mod_name}")
 		subreddit.banned.add(user, ban_reason="abusive commment", ban_message=f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}")
 		add_usernote(subreddit, user, mod_name, "ban", f"{days_ban}d - abusive comment", permalink)
 
