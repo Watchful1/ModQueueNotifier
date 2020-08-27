@@ -150,7 +150,6 @@ if __name__ == "__main__":
 							count_removed = utils.recursive_remove_comments(item)
 							if count_removed > 1:
 								log.info(f"Recursively removed {count_removed} comments")
-							# archive modmail
 
 			for submission in sub.new(limit=25):
 				processed = False
@@ -220,23 +219,30 @@ if __name__ == "__main__":
 			for conversation in conversations:
 				archive = None
 				if len(conversation.authors) == 1 and \
-						conversation.authors[0].name == "AutoModerator" and \
+						conversation.authors[0].name in {"AutoModerator", "OWMatchThreads"} and \
 						len(conversation.messages) == 1:
-					links = re.findall(r'(?:reddit.com/r/\w*/comments/)(\w*)', conversation.messages[0].body_markdown)
-					if len(links) == 1:
-						submission = r.submission(links[0])
-						if submission.selftext == "[deleted]" or submission.author == "[deleted]":
-							archive = "Deleted by user"
-						elif submission.locked or submission.removed:
-							if len(submission.comments) and submission.comments[0].stickied:
-								archive = f"Removed by u/{submission.comments[0].author.name}"
-						elif submission.approved:
-							archive = f"Approved by u/{submission.approved_by}"
+					if conversation.authors[0].name == "OWMatchThreads":
+						archive = "OWMatchThreads"
+					else:
+						links = re.findall(r'(?:reddit.com/r/\w*/comments/)(\w*)', conversation.messages[0].body_markdown)
+						if len(links) == 1:
+							submission = r.submission(links[0])
+							if submission.selftext == "[deleted]" or submission.author == "[deleted]":
+								archive = "Deleted by user"
+							elif submission.locked or submission.removed:
+								if len(submission.comments) and submission.comments[0].stickied:
+									archive = f"Removed by u/{submission.comments[0].author.name}"
+							elif submission.approved:
+								archive = f"Approved by u/{submission.approved_by}"
 
 				if archive is not None:
-					log.info(f"Archiving automod notification: {conversation.id}")
-					conversation.reply(archive)
-					conversation.archive()
+					if archive == "OWMatchThreads":
+						log.info(f"Archiving OWMatchThreads message: {conversation.id}")
+						conversation.archive()
+					else:
+						log.info(f"Archiving automod notification: {conversation.id}")
+						conversation.reply(archive)
+						conversation.archive()
 				elif not conversation.is_highlighted:
 					mail_count += 1
 					modmail_age = datetime.strptime(conversation.last_updated, "%Y-%m-%dT%H:%M:%S.%f+00:00")
