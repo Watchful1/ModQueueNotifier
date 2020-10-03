@@ -33,16 +33,9 @@ MODERATORS = {
 	"ModWilliam": "321107093773877257",
 	"Blaiidds": "204445334255042560",
 	"DatGameGuy": "132969627050311680",
+	"Dobvius": "171644935446069249",
 	"OWMatchThreads": "OWMatchThreads",
 	"AutoModerator": "AutoModerator",
-
-	"ExcitablePancake": "123149791864684545",
-	"Jawoll": "122438001572839425",
-	"Juicysteak117": "112685077707665408",
-	"shomman": "166037812070580225",
-	"venom_11": "174059362334146560",
-	"ABCdropbear": "140284504702058497",
-	"Puck83821": "280862474914365440",
 }
 
 KNOWN_LOG_TYPES = {
