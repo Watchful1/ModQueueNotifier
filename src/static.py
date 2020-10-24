@@ -34,6 +34,7 @@ MODERATORS = {
 	"Blaiidds": "204445334255042560",
 	"DatGameGuy": "132969627050311680",
 	"Dobvius": "171644935446069249",
+	"FelipeDoesStats": "277798095906144257",
 	"OWMatchThreads": "OWMatchThreads",
 	"AutoModerator": "AutoModerator",
 }
