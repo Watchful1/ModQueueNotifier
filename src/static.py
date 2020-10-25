@@ -159,4 +159,7 @@ The exception is made for video memes (for example, Overwatch related text and i
 	"offtopic":
 		{"rule": "9", "reason": """>This post doesn't relate to Competitive Overwatch or Overwatch esports."""
 		},
+	"dupe":
+		{"rule": "10", "reason": """>Someone else has posted about this topic recently. Occasionally we may pick an alternative thread if it has more discussion, even if it's not the first thread on a subject."""
+		},
 }
