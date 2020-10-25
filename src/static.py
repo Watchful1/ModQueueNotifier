@@ -156,4 +156,7 @@ The exception is made for video memes (for example, Overwatch related text and i
 
 >AMA posts can only be requested by players, coaches, teams, and/or other community figures."""
 		},
+	"offtopic":
+		{"rule": "9", "reason": """>This post doesn't relate to Competitive Overwatch or Overwatch esports."""
+		},
 }

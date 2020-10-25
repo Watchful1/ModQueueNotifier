@@ -156,7 +156,7 @@ if __name__ == "__main__":
 					for report_reason, mod_name in item.mod_reports:
 						if report_reason in static.REPORT_REASONS:
 							removal_dict = static.REPORT_REASONS[report_reason]
-							log.info(f"Removing post {item.id} for rule {removal_dict['rule']} by u/{mod_name}")
+							log.info(f"Removing post {item.id} for rule {removal_dict['rule']} from u/{mod_name}")
 							item.mod.remove()
 							item.mod.lock()
 							item.mod.flair("Removed")
