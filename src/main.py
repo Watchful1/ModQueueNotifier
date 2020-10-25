@@ -150,6 +150,23 @@ if __name__ == "__main__":
 							count_removed = utils.recursive_remove_comments(item)
 							if count_removed > 1:
 								log.info(f"Recursively removed {count_removed} comments")
+							break
+
+				if item.fullname.startswith("t3_") and len(item.mod_reports):
+					for report_reason, mod_name in item.mod_reports:
+						if report_reason in static.REPORT_REASONS:
+							removal_dict = static.REPORT_REASONS[report_reason]
+							log.info(f"Removing post {item.id} for rule {removal_dict['rule']} by u/{mod_name}")
+							item.mod.remove()
+							item.mod.lock()
+							item.mod.flair("Removed")
+
+							comment = item.reply(
+								f"{static.REMOVAL_REASON_HEADER}\n\n{removal_dict['reason']}\n\n"
+								f"{static.REMOVAL_REASON_FOOTER}\n\nTriggered by mod {mod_name}")
+							comment.mod.distinguish(how="yes", sticky=True)
+
+							break
 
 			for submission in sub.new(limit=25):
 				processed = False

@@ -70,3 +70,90 @@ WARNING_LOG_TYPES = {
 	'editflair': {"mod": "!OWMatchThreads", "target_title": "!"},
 	'wikirevise': {"mod": "!OWMatchThreads", "details": "!Page usernotes edited"},
 }
+
+REMOVAL_REASON_HEADER = """Thank you for your submission to /r/CompetitiveOverwatch! Unfortunately it was removed for the following reason(s):"""
+REMOVAL_REASON_FOOTER = """Please [message the moderators](https://www.reddit.com/message/compose?to=/r/CompetitiveOverwatch) if you have any questions."""
+
+REPORT_REASONS = {
+	"#1 No Poor or Abusive Behavior":
+		{"rule": "1", "reason": """>Posts and comments that are toxic or break Reddiquette will be removed. This includes, but is not limited to:
+
+>* Personal attacks, targeted harassment, and/or any other form of abusive behavior against other users, players, or community figures (Remember that players and community figures read /r/CompetitiveOverwatch too!)  
+* Any form of hate speech or bigotry is not tolerated (such as sexism, racism, homophobia, transphobia, ableism, etc)  
+* Witch-hunts, vote manipulation, and/or brigading (also see Rule #6 for further clarification about witch-hunts)  
+* Posting other users' personal information without their consent (doxing)  
+* Offering, requesting, promoting, and/or linking to cheats, rank manipulation services, and/or game-breaking exploits  
+* Photos or videos taken of players, community figures, or other persons without their consent, outside of official events  
+* Trolling and/or repeated comments/posts that cause significant Community Disruption.  
+
+>If you see any doxing or feel that you are the target of harassment, please [message the mod team](https://www.reddit.com/message/compose?to=%2Fr%2FCompetitiveoverwatch) immediately!"""
+		},
+	"#2 No Off-Topic or Low-Value Content":
+		{"rule": "2", "reason": """>Your post is in violation of Rule #2 and is considered low value. A list of examples of high vs low value content [can be found here](https://www.reddit.com/r/Competitiveoverwatch/wiki/rules#wiki_rule_.232_no_off-topic_or_low-value_content)."""
+		},
+	"#3 No Spoilers in titles for 24 Hours":
+		{"rule": "3", "reason": """>Your post title contains a spoiler. Because not everybody has the luxury of watching live, we prevent spoilers for 24 hours after a match or tournament. However, you may re-post your thread with a more suitable title."""
+		},
+	"#4 Limit Self Promotion":
+		{"rule": "4", "reason": """>For every 9 posts or comments you make on other people's content here on /r/CompetitiveOverwatch, you are allowed to post 1 item of your own content. Even if you are not the creator, repeatedly posting the same person's content is subject to this rule as well. You must post at least 9 non-affiliated comments or submissions between each post. These comments and posts should be genuine, and not meaningless fluff intended solely to reach the 9:1 ratio.
+
+>Exceptions:
+
+>* Tournament announcements and news articles announcing team signings and/or roster changes  
+* Official content from Overwatch League teams or Contenders teams  
+* Written articles where the entire text of the article is posted to the subreddit  
+
+>Prohibited:
+
+>* Prize draws and/or giveaways  
+* Gambling or other paid services  
+* Discord communities unless they are for a tournament.  
+* LFT self-posts for players, coaches, or staff  """
+		},
+	"#5 Meme Restrictions":
+		{"rule": "5", "reason": """Your post is in violation of our meme guidelines under Rule #5:
+
+Memes must be related to competitive Overwatch and based on a non-generic template.
+
+A non-generic template contains content that is entirely from the Overwatch game, Overwatch-related media, or competitive Overwatch tournaments. Overwatch images imposed over a generic template are not allowed.
+
+The exception is made for video memes (for example, Overwatch related text and images overlaid onto a video) and templates recreated in their entirety (for example, https://i.redd.it/vvvyde85a4j31.png)."""
+		},
+	"#6 Accusations or Calls to Action":
+		{"rule": "6", "reason": """>No Unsubstantiated Accusations or Calls to Action
+
+>Posting clips, images or claims that could result in a person being subject to investigation and/or disciplinary action by Blizzard, team management, or other authority is prohibited until there is an official public announcement, or if it is published by a reputable source (see below for details).
+
+>This includes, but is not limited to the following:
+
+>- Cheating
+>- Boosting
+>- Throwing / One-tricking
+>- False reporting
+
+> If you come across anyone doing any of the above, report them directly to Blizzard through the proper channels, do not post a thread about the incident here.
+
+> A post being classified as "published by a reputable source" requires one of the following three:
+
+>- Being a party directly linked to the story.
+>- A proven track record of investigative journalism.
+>- Confidential verification of the story to the mod team."""
+		},
+	"#7 Gameplay Content":
+		{"rule": "7", "reason": """###Rule #7 Gameplay Content
+
+>All gameplay content, such as clips and videos where the main focus is on the gameplay, must primarily contain content from competitive modes such as the competitive ladder, scrims, and/or tournaments, and are subject to the following limitations:
+
+>* General gameplay videos are never allowed, including VOD review requests (head over to /r/OverwatchUniversity for VOD review requests)  
+* Montages and/or frag movies must be of a pro-player, pro-team, and/or community figures  
+* Stream highlights must showcase an extremely high-level of play, an exceptional level of skill, and/or a highly unusual moment  
+* Tournament highlights are generally allowed provided that they are clips of an actual play and/or strategy  
+
+> All other clips and videos are subject to Rule #2 instead."""
+		},
+	"#8 AMAs":
+		{"rule": "8", "reason": """>All AMA (Ask Me Anything) posts must be pre-approved by the mod team without exception. Any posted without approval will be removed.
+
+>AMA posts can only be requested by players, coaches, teams, and/or other community figures."""
+		},
+}
