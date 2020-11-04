@@ -5,8 +5,25 @@ import base64
 import zlib
 import discord_logging
 import re
+import requests
+import prawcore
 
 log = discord_logging.get_logger()
+
+
+def process_error(message, exception, traceback):
+	is_transient = \
+		isinstance(exception, prawcore.exceptions.ServerError) or \
+		isinstance(exception, requests.exceptions.Timeout) or \
+		isinstance(exception, requests.exceptions.ReadTimeout) or \
+		isinstance(exception, requests.exceptions.RequestException)
+	log.warning(f"{message}: {type(exception).__name__} : {exception}")
+	if is_transient:
+		log.info(traceback)
+	else:
+		log.warning(traceback)
+
+	return is_transient
 
 
 def check_threshold(bldr, level, key, string):

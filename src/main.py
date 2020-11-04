@@ -108,6 +108,12 @@ if __name__ == "__main__":
 							else:
 								warning_type = None
 								break
+						elif value.startswith("~"):
+							if value[1:] in log_item_value:
+								warning_type = "6"
+							else:
+								warning_type = None
+								break
 						elif log_item_value == value:
 							warning_type = "3"
 						else:
@@ -328,8 +334,7 @@ if __name__ == "__main__":
 
 			log.debug("Run complete after: %d", int(time.perf_counter() - startTime))
 		except Exception as err:
-			log.warning("Hit an error in main loop")
-			log.warning(traceback.format_exc())
+			utils.process_error(f"Hit an error in main loop", err, traceback.format_exc())
 
 		database.session.commit()
 		discord_logging.flush_discord()
