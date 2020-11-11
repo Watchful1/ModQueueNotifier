@@ -60,6 +60,7 @@ if __name__ == "__main__":
 	static.WEBHOOK = discord_logging.get_config_var(discord_logging.get_config(), args.user, 'webhook_redditmodtalk')
 
 	log.info(f"Logged into reddit as /u/{r.user.me().name}")
+	log.info(f"Python version {sys.version}")
 
 	prometheus_client.start_http_server(8003)
 	prom_mod_actions = prometheus_client.Counter("bot_mod_actions", "Mod actions by moderator", ['moderator'])
