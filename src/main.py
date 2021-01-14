@@ -223,10 +223,15 @@ if __name__ == "__main__":
 
 			# log when there's a reply to a highlighted modmail
 			for conversation in sub.modmail.conversations(limit=10, state='all'):
-				if utils.conversation_is_unread(conversation) and conversation.is_highlighted:
-					if utils.conversation_not_processed(conversation, modmails, start_time):
+				if utils.conversation_is_unread(conversation):
+					conversation_type = None
+					if len([author for author in conversation.authors if author.is_admin]) > 0:
+						conversation_type = "Admin"
+					elif conversation.is_highlighted:
+						conversation_type = "Highlighted"
+					if conversation_type is not None and utils.conversation_not_processed(conversation, modmails, start_time):
 						log.warning(
-							f"Highlighted modmail has a new reply: https://mod.reddit.com/mail/all/{conversation.id}")
+							f"{conversation_type} modmail has a new reply: https://mod.reddit.com/mail/all/{conversation.id}")
 						modmails[conversation.id] = utils.parse_modmail_datetime(conversation.last_updated)
 
 			# log when a modmail is archived without a response
