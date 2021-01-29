@@ -270,7 +270,7 @@ if __name__ == "__main__":
 						conversation.archive()
 					else:
 						log.info(f"Archiving automod notification: {conversation.id}")
-						conversation.reply(archive)
+						conversation.reply(archive, internal=True)
 						conversation.archive()
 				elif not conversation.is_highlighted:
 					mail_count += 1
