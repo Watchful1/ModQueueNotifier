@@ -23,6 +23,7 @@ class LogItem(Base):
 	target_title = Column(String(300))
 	target_body = Column(String(300))
 	description = Column(String(300))
+	subreddit = Column(String(60))
 
 	def __init__(self, log_item):
 		self.id = log_item.id
@@ -36,6 +37,7 @@ class LogItem(Base):
 		self.target_title = log_item.target_title
 		self.target_body = log_item.target_body
 		self.description = log_item.description
+		self.subreddit = log_item.subreddit
 
 
 def init():

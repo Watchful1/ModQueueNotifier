@@ -7,6 +7,7 @@ import discord_logging
 import re
 import requests
 import prawcore
+import math
 
 log = discord_logging.get_logger()
 
@@ -24,14 +25,6 @@ def process_error(message, exception, traceback):
 		log.warning(traceback)
 
 	return is_transient
-
-
-def check_threshold(bldr, level, key, string):
-	if level >= static.THRESHOLDS[key]['post']:
-		bldr.append(string)
-	if level >= static.THRESHOLDS[key]['ping']:
-		return True
-	return False
 
 
 def parse_modmail_datetime(datetime_string):
@@ -130,19 +123,3 @@ def warn_ban_user(user, mod_name, subreddit, days_ban, permalink):
 		log.info(f"Banning u/{user.name} for {days_ban} days, rule 1 from u/{mod_name}")
 		subreddit.banned.add(user, duration=days_ban, ban_reason=f"abusive commment u/{mod_name}", ban_message=f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}\n\nFrom u/{mod_name}")
 		add_usernote(subreddit, user, mod_name, "ban", f"{days_ban}d - abusive comment", permalink)
-
-
-class Queue:
-	def __init__(self, max_size):
-		self.list = []
-		self.max_size = max_size
-		self.set = set()
-
-	def put(self, item):
-		if len(self.list) >= self.max_size:
-			self.list.pop(0)
-		self.list.append(item)
-		self.set.add(item)
-
-	def contains(self, item):
-		return item in self.set

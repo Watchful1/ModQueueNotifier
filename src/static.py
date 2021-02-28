@@ -1,20 +1,8 @@
 
-SUBREDDIT = "CompetitiveOverwatch"
 USER_AGENT = "ModQueueNotifier (by /u/Watchful1)"
-LOOP_TIME = 1 * 60
-REDDIT_OWNER = "Watchful1"
-WEBHOOK = "https://discordapp.com/api/webhooks/{}/{}"
 
 
-THRESHOLDS = {
-	'unmod': {'post': 15, 'ping': 20},
-	'unmod_hours': {'post': 4, 'ping': 6},
-	'modqueue': {'post': 8, 'ping': 12},
-	'modmail': {'post': 5, 'ping': 8},
-	'modmail_hours': {'post': 12, 'ping': 24},
-}
-
-MODERATORS = {
+COMPOW_MODERATORS = {
 	"merger3": "143730443777343488",
 	"DerWaechter_": "193382989718093833",
 	"connlocks": "139462031894904832",
@@ -38,6 +26,17 @@ MODERATORS = {
 	"FelipeDoesStats2": "277798095906144257",
 	"OWMatchThreads": "OWMatchThreads",
 	"AutoModerator": "AutoModerator",
+}
+
+BAYAREA_MODERATORS = {
+	"dihydrogen_monoxide",
+	"TrucyWright",
+	"stacysayshi",
+	"Watchful1",
+	"which_objective",
+	"MsNewKicks",
+	"AutoModerator",
+	"BotDefense",
 }
 
 KNOWN_LOG_TYPES = {
@@ -65,17 +64,17 @@ KNOWN_LOG_TYPES = {
 	'markoriginalcontent',
 }
 
-WARNING_LOG_TYPES = {
+COMPOW_WARNING_LOG_TYPES = {
 	"banuser": {"details": "~permanent", "print": ["target_author", "details"]},
 	'unbanuser': {"description": "!was temporary"},
 	'editflair': {"mod": "!OWMatchThreads", "target_title": "!"},
 	'wikirevise': {"mod": "!OWMatchThreads", "details": "!Page usernotes edited"},
 }
 
-REMOVAL_REASON_HEADER = """Thank you for your submission to /r/CompetitiveOverwatch! Unfortunately it was removed for the following reason(s):"""
-REMOVAL_REASON_FOOTER = """Please [message the moderators](https://www.reddit.com/message/compose?to=/r/CompetitiveOverwatch) if you have any questions."""
+REMOVAL_REASON_HEADER = """Thank you for your submission to /r/{}! Unfortunately it was removed for the following reason(s):"""
+REMOVAL_REASON_FOOTER = """Please [message the moderators](https://www.reddit.com/message/compose?to=/r/{}) if you have any questions."""
 
-REPORT_REASONS = {
+COMPOW_REPORT_REASONS = {
 	"#1 No Poor or Abusive Behavior":
 		{"rule": "1", "reason": """>Posts and comments that are toxic or break Reddiquette will be removed. This includes, but is not limited to:
 

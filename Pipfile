@@ -8,6 +8,7 @@ praw = "*"
 discord-logging = {git = "https://github.com/Watchful1/DiscordLogging.git"}
 prometheus-client = "*"
 sqlalchemy = "*"
+requests = "*"
 
 [dev-packages]
 
