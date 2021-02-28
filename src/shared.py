@@ -23,7 +23,7 @@ def ingest_log(subreddit, database):
 		warning_items = []
 		if log_item.mod.name not in subreddit.moderators:
 			warning_type = "1"
-		elif log_item.action in subreddit.warning_log_types:
+		elif subreddit.warning_log_types is not None and log_item.action in subreddit.warning_log_types:
 			sub_filters = subreddit.warning_log_types[log_item.action]
 			for item, value in sub_filters.items():
 				if item == "print":
@@ -169,13 +169,14 @@ def count_queues(subreddit):
 		counters.queue_size.labels(type='unmod_hours', subreddit=subreddit.name).set(subreddit.oldest_unmod_hours)
 
 	if subreddit.thresholds['modqueue']['track']:
-		subreddit.reported_count = len(list(subreddit.modqueue(limit=None)))
+		subreddit.reported_count = len(list(subreddit.sub_object.mod.modqueue(limit=None)))
 
 		counters.queue_size.labels(type='modqueue', subreddit=subreddit.name).set(subreddit.reported_count)
 
 	log.debug(
-		f"Unmod: {subreddit.unmod_count}, age: {subreddit.oldest_unmod_hours}, modqueue: {subreddit.reported_count}, "
-		f"modmail: {subreddit.mail_count}, modmail hours: {subreddit.oldest_modmail_hours}")
+		f"r/{subreddit.name}: Unmod: {subreddit.unmod_count}, age: {subreddit.oldest_unmod_hours}, "
+		f"modqueue: {subreddit.reported_count}, modmail: {subreddit.mail_count}, "
+		f"modmail hours: {subreddit.oldest_modmail_hours}")
 
 
 def ping_queues(subreddit, database):

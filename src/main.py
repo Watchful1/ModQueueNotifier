@@ -37,7 +37,6 @@ signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == "__main__":
 	parser = argparse.ArgumentParser(description="modqueue bot")
-	parser.add_argument("user", help="The reddit user account to use")
 	parser.add_argument("--once", help="Only run the loop once", action='store_const', const=True, default=False)
 	parser.add_argument("--debug", help="Set the log level to debug", action='store_const', const=True, default=False)
 	args = parser.parse_args()
@@ -45,7 +44,7 @@ if __name__ == "__main__":
 	if args.debug:
 		discord_logging.set_level(logging.DEBUG)
 
-	discord_logging.init_discord_logging(args.user, logging.WARNING, 1)
+	#discord_logging.init_discord_logging("OWMatchThreads", logging.WARNING, 1)
 	database.init()
 
 	instances = {}
@@ -75,7 +74,7 @@ if __name__ == "__main__":
 			'modmail': {'track': True, 'post': 5, 'ping': 8},
 			'modmail_hours': {'post': 12, 'ping': 24},
 		},
-		webhook=discord_logging.get_config_var(discord_logging.get_config(), args.user, 'webhook_redditmodtalk')
+		webhook=discord_logging.get_config_var(discord_logging.get_config(), "OWMatchThreads", 'webhook_redditmodtalk')
 	)
 	bay_area = Subreddit(
 		"bayarea",

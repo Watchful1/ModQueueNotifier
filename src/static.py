@@ -33,6 +33,7 @@ BAYAREA_MODERATORS = {
 	"TrucyWright",
 	"stacysayshi",
 	"Watchful1",
+	"-dantastic-",
 	"which_objective",
 	"MsNewKicks",
 	"AutoModerator",
