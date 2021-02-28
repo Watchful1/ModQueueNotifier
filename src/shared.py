@@ -143,34 +143,39 @@ def log_archived_modmail_no_response(subreddit, start_time):
 
 
 def count_queues(subreddit):
-	oldest_modmail = datetime.utcnow()
-	for conversation in subreddit.combined_modmail():
-		if not conversation.is_highlighted:
-			subreddit.mail_count += 1
-			modmail_age = datetime.strptime(conversation.last_updated, "%Y-%m-%dT%H:%M:%S.%f+00:00")
-			if modmail_age < oldest_modmail:
-				oldest_modmail = modmail_age
+	if subreddit.thresholds['modmail']['track']:
+		oldest_modmail = datetime.utcnow()
+		for conversation in subreddit.combined_modmail():
+			if not conversation.is_highlighted:
+				subreddit.mail_count += 1
+				modmail_age = datetime.strptime(conversation.last_updated, "%Y-%m-%dT%H:%M:%S.%f+00:00")
+				if modmail_age < oldest_modmail:
+					oldest_modmail = modmail_age
 
-	subreddit.oldest_modmail_hours = math.trunc((datetime.utcnow() - oldest_modmail).seconds / (60 * 60))
+		subreddit.oldest_modmail_hours = math.trunc((datetime.utcnow() - oldest_modmail).seconds / (60 * 60))
 
-	oldest_unmod = datetime.utcnow()
-	for submission in subreddit.sub_object.mod.unmoderated():
-		subreddit.unmod_count += 1
-		oldest_unmod = datetime.utcfromtimestamp(submission.created_utc)
+		counters.queue_size.labels(type='modmail', subreddit=subreddit.name).set(subreddit.mail_count)
+		counters.queue_size.labels(type='modmail_hours', subreddit=subreddit.name).set(subreddit.oldest_modmail_hours)
 
-	subreddit.oldest_unmod_hours = math.trunc((datetime.utcnow() - oldest_unmod).seconds / (60 * 60))
+	if subreddit.thresholds['unmod']['track']:
+		oldest_unmod = datetime.utcnow()
+		for submission in subreddit.sub_object.mod.unmoderated():
+			subreddit.unmod_count += 1
+			oldest_unmod = datetime.utcfromtimestamp(submission.created_utc)
 
-	subreddit.reported_count = len(list(subreddit.modqueue(limit=None)))
+		subreddit.oldest_unmod_hours = math.trunc((datetime.utcnow() - oldest_unmod).seconds / (60 * 60))
+
+		counters.queue_size.labels(type='unmod', subreddit=subreddit.name).set(subreddit.unmod_count)
+		counters.queue_size.labels(type='unmod_hours', subreddit=subreddit.name).set(subreddit.oldest_unmod_hours)
+
+	if subreddit.thresholds['modqueue']['track']:
+		subreddit.reported_count = len(list(subreddit.modqueue(limit=None)))
+
+		counters.queue_size.labels(type='modqueue', subreddit=subreddit.name).set(subreddit.reported_count)
 
 	log.debug(
 		f"Unmod: {subreddit.unmod_count}, age: {subreddit.oldest_unmod_hours}, modqueue: {subreddit.reported_count}, "
 		f"modmail: {subreddit.mail_count}, modmail hours: {subreddit.oldest_modmail_hours}")
-
-	counters.queue_size.labels(type='unmod', subreddit=subreddit.name).set(subreddit.unmod_count)
-	counters.queue_size.labels(type='unmod_hours', subreddit=subreddit.name).set(subreddit.oldest_unmod_hours)
-	counters.queue_size.labels(type='modqueue', subreddit=subreddit.name).set(subreddit.reported_count)
-	counters.queue_size.labels(type='modmail', subreddit=subreddit.name).set(subreddit.mail_count)
-	counters.queue_size.labels(type='modmail_hours', subreddit=subreddit.name).set(subreddit.oldest_modmail_hours)
 
 
 def ping_queues(subreddit, database):

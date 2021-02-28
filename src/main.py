@@ -69,10 +69,10 @@ if __name__ == "__main__":
 		report_reasons=static.COMPOW_REPORT_REASONS,
 		reapprove_reasons=['#2 No Off-Topic or Low-Value Content', 'This is spam'],
 		thresholds={
-			'unmod': {'post': 15, 'ping': 20},
+			'unmod': {'track': True, 'post': 15, 'ping': 20},
 			'unmod_hours': {'post': 4, 'ping': 6},
-			'modqueue': {'post': 8, 'ping': 12},
-			'modmail': {'post': 5, 'ping': 8},
+			'modqueue': {'track': True, 'post': 8, 'ping': 12},
+			'modmail': {'track': True, 'post': 5, 'ping': 8},
 			'modmail_hours': {'post': 12, 'ping': 24},
 		},
 		webhook=discord_logging.get_config_var(discord_logging.get_config(), args.user, 'webhook_redditmodtalk')
@@ -80,7 +80,12 @@ if __name__ == "__main__":
 	bay_area = Subreddit(
 		"bayarea",
 		instances['Watchful1'],
-		static.BAYAREA_MODERATORS
+		static.BAYAREA_MODERATORS,
+		thresholds={
+			'unmod': {'track': False},
+			'modqueue': {'track': True},
+			'modmail': {'track': True},
+		},
 	)
 
 	while True:
