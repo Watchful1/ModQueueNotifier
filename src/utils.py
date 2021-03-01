@@ -117,9 +117,9 @@ def add_usernote(sub, user, mod_name, type, note_text, permalink):
 def warn_ban_user(user, mod_name, subreddit, days_ban, permalink):
 	if days_ban is None:
 		log.info(f"Warning u/{user.name}, rule 1 from u/{mod_name}")
-		user.message("Rule 1 warning", f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}\n\nFrom u/{mod_name}", from_subreddit=subreddit.display_name)
-		add_usernote(subreddit, user, mod_name, "abusewarn", "abusive comment", permalink)
+		user.message("Rule 1 warning", f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}\n\nFrom u/{mod_name}", from_subreddit=subreddit.name)
+		add_usernote(subreddit.sub_object, user, mod_name, "abusewarn", "abusive comment", permalink)
 	else:
 		log.info(f"Banning u/{user.name} for {days_ban} days, rule 1 from u/{mod_name}")
 		subreddit.banned.add(user, duration=days_ban, ban_reason=f"abusive commment u/{mod_name}", ban_message=f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}\n\nFrom u/{mod_name}")
-		add_usernote(subreddit, user, mod_name, "ban", f"{days_ban}d - abusive comment", permalink)
+		add_usernote(subreddit.sub_object, user, mod_name, "ban", f"{days_ban}d - abusive comment", permalink)
