@@ -44,7 +44,7 @@ if __name__ == "__main__":
 	if args.debug:
 		discord_logging.set_level(logging.DEBUG)
 
-	#discord_logging.init_discord_logging("OWMatchThreads", logging.WARNING, 1)
+	discord_logging.init_discord_logging("OWMatchThreads", logging.WARNING, 1)
 	database.init()
 
 	instances = {}
