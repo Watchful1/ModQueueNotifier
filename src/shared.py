@@ -185,7 +185,7 @@ def ping_queues(subreddit, database):
 	if subreddit.last_posted is None or datetime.utcnow() - timedelta(hours=1) > subreddit.last_posted:
 		if count_string is not None:
 			log.info(f"Posting: {count_string}")
-			requests.post(subreddit.WEBHOOK, data={"content": count_string})
+			requests.post(subreddit.webhook, data={"content": count_string})
 			subreddit.last_posted = datetime.utcnow()
 			subreddit.has_posted = True
 		else:
@@ -210,7 +210,7 @@ def ping_queues(subreddit, database):
 			if mod_clear is not None:
 				clear_string = f"{mod_clear} cleared the queues!"
 				log.info(clear_string)
-				requests.post(subreddit.WEBHOOK, data={"content": clear_string})
+				requests.post(subreddit.webhook, data={"content": clear_string})
 			else:
 				log.info("Couldn't figure out who cleared the queue")
 
