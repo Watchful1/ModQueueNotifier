@@ -90,12 +90,15 @@ def process_modqueue_comments(subreddit):
 					days = None
 					if len(items) > 1:
 						if items[1] == 'w':
+							log.info(f"Processing new warning comment report: {report_reason}")
 							days = 0
 						elif items[1] == 'p':
+							log.info(f"Processing new permaban comment report: {report_reason}")
 							days = -1
 						else:
 							try:
 								days = int(items[1])
+								log.info(f"Processing new {days} day ban comment report: {report_reason}")
 							except ValueError:
 								pass
 
@@ -105,8 +108,10 @@ def process_modqueue_comments(subreddit):
 					if days is None:
 						if user_note is not None:
 							days_ban, note_is_old = user_note.get_recent_warn_ban()
+							log.info(f"Processing new comment report: {report_reason}. Got {days_ban} days ban from notes")
 						else:
 							days_ban, note_is_old = None, False
+							log.info(f"Processing new comment report: {report_reason}. No usernotes")
 						days = subreddit.get_next_ban_tier(days_ban, note_is_old)
 
 					item_link = f"https://www.reddit.com{item.permalink}"
