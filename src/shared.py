@@ -129,14 +129,14 @@ def process_modqueue_comments(subreddit):
 					else:
 						if days == -1:
 							log.warning(f"Banning u/{username} permanently, rule 1 from u/{mod_name}")
-							subreddit.banned.add(
+							subreddit.sub_object.banned.add(
 								item.author,
 								ban_reason=f"abusive commment u/{mod_name}",
 								ban_message=f"No poor or abusive behavior\n\n{item_link}\n\nFrom u/{mod_name}")
 							note = Note.build_note(sub_notes, mod_name, "permban", f"abusive comment", datetime.utcnow(), item_link)
 						else:
 							log.info(f"Banning u/{username} for {days} days, rule 1 from u/{mod_name}")
-							subreddit.banned.add(
+							subreddit.sub_object.banned.add(
 								item.author,
 								duration=days,
 								ban_reason=f"abusive commment u/{mod_name}",
