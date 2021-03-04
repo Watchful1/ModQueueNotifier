@@ -5,8 +5,6 @@ from datetime import datetime
 
 log = discord_logging.get_logger()
 
-import static
-
 
 def process_submissions(subreddit):
 	for submission in subreddit.sub_object.new(limit=25):
@@ -42,7 +40,7 @@ def process_submissions(subreddit):
 			blame_string = f"{user} approved without adding a flair: <https://www.reddit.com{submission.permalink}>"
 			log.info(f"Posting: {blame_string}")
 			subreddit.posts_notified.put(submission.id)
-			requests.post(static.WEBHOOK, data={"content": blame_string})
+			requests.post(subreddit.webhook, data={"content": blame_string})
 
 
 def parse_modmail(subreddit):

@@ -11,6 +11,8 @@ import math
 
 log = discord_logging.get_logger()
 
+from classes import SubredditNotes, UserNotes, Note
+
 
 def process_error(message, exception, traceback):
 	is_transient = \
@@ -51,23 +53,14 @@ def recursive_remove_comments(comment, count_removed=1):
 	return count_removed
 
 
-def get_usernotes(sub):
-	wiki_page = sub.wiki['usernotes']
-	json_data = json.loads(wiki_page.content_md)
-	blob = json_data["blob"]
-	decoded = base64.b64decode(blob)
-	raw = zlib.decompress(decoded)
-	parsed = json.loads(raw)
-	return json_data, parsed
+def get_usernotes(subreddit):
+	json_text = subreddit.sub_object.wiki['usernotes'].content_md
+	return SubredditNotes.from_dict(subreddit.name, json_text)
 
 
-def save_usernotes(sub, notes_json, notes, user):
-	blob = json.dumps(notes).encode()
-	compressed_blob = zlib.compress(blob)
-	encoded_blob = base64.b64encode(compressed_blob).decode()
-	notes_json['blob'] = str(encoded_blob)
-	wiki_page = sub.wiki['usernotes']
-	wiki_page.edit(json.dumps(notes_json), reason=f"\"create new note on user {user}\" via OWMatchThreads")
+def save_usernotes(subreddit, sub_notes, change_reason):
+	json_dict = sub_notes.to_dict()
+	subreddit.sub_object.wiki['usernotes'].edit(json.dumps(json_dict), reason=change_reason)
 
 
 def add_usernote(sub, user, mod_name, type, note_text, permalink):
@@ -112,14 +105,3 @@ def add_usernote(sub, user, mod_name, type, note_text, permalink):
 		notes[user.name] = {'ns': [note]}
 
 	save_usernotes(sub, notes_json, notes, user)
-
-
-def warn_ban_user(user, mod_name, subreddit, days_ban, permalink):
-	if days_ban is None:
-		log.info(f"Warning u/{user.name}, rule 1 from u/{mod_name}")
-		user.message("Rule 1 warning", f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}\n\nFrom u/{mod_name}", from_subreddit=subreddit.name)
-		add_usernote(subreddit.sub_object, user, mod_name, "abusewarn", "abusive comment", permalink)
-	else:
-		log.info(f"Banning u/{user.name} for {days_ban} days, rule 1 from u/{mod_name}")
-		subreddit.banned.add(user, duration=days_ban, ban_reason=f"abusive commment u/{mod_name}", ban_message=f"No poor or abusive behavior\n\nhttps://www.reddit.com{permalink}\n\nFrom u/{mod_name}")
-		add_usernote(subreddit.sub_object, user, mod_name, "ban", f"{days_ban}d - abusive comment", permalink)

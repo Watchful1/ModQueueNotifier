@@ -40,7 +40,7 @@ BAYAREA_MODERATORS = {
 	"BotDefense",
 }
 
-KNOWN_LOG_TYPES = {
+COMPOW_KNOWN_LOG_TYPES = {
 	'spamlink',
 	'removelink',
 	'approvelink',
@@ -65,10 +65,44 @@ KNOWN_LOG_TYPES = {
 	'markoriginalcontent',
 }
 
+BAYAREA_KNOWN_LOG_TYPES = {
+	'spamlink',
+	'removelink',
+	'approvelink',
+	'spamcomment',
+	'removecomment',
+	'approvecomment',
+	'showcomment',
+	'distinguish',
+	'marknsfw',
+	'ignorereports',
+	'unignorereports',
+	'setsuggestedsort',
+	'sticky',
+	'unsticky',
+	'setcontestmode',
+	'unsetcontestmode',
+	'lock',
+	'unlock',
+	'spoiler',
+	'unspoiler',
+	'modmail_enrollment',
+	'markoriginalcontent',
+	'banuser',
+	'unbanuser',
+	'editflair',
+	'submit_scheduled_post',
+	'unmuteuser',
+}
+
 COMPOW_WARNING_LOG_TYPES = {
 	"banuser": {"details": "~permanent", "print": ["target_author", "details"]},
 	'unbanuser': {"description": "!was temporary"},
 	'editflair': {"mod": "!OWMatchThreads", "target_title": "!"},
+	'wikirevise': {"mod": "!OWMatchThreads", "details": "!Page usernotes edited"},
+}
+
+BAYAREA_WARNING_LOG_TYPES = {
 	'wikirevise': {"mod": "!OWMatchThreads", "details": "!Page usernotes edited"},
 }
 

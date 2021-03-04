@@ -10,6 +10,7 @@ import counters
 import utils
 import static
 from database import LogItem
+from classes import UserNotes, Note
 
 
 def ingest_log(subreddit, database):
@@ -54,7 +55,7 @@ def ingest_log(subreddit, database):
 				else:
 					warning_type = None
 					break
-		elif log_item.action not in static.KNOWN_LOG_TYPES:
+		elif log_item.action not in subreddit.known_log_types:
 			warning_type = "2"
 
 		if warning_type is not None:
@@ -64,7 +65,7 @@ def ingest_log(subreddit, database):
 		database.session.merge(LogItem(log_item))
 
 
-def process_modqueue(subreddit):
+def process_modqueue_reapprove(subreddit):
 	for item in list(subreddit.modqueue()):
 		if item.approved:
 			approve = True
@@ -79,24 +80,77 @@ def process_modqueue(subreddit):
 				item.mod.approve()
 				subreddit.modqueue().remove(item)
 
+
+def process_modqueue_comments(subreddit):
+	for item in list(subreddit.modqueue()):
 		if item.fullname.startswith("t1_") and len(item.mod_reports):
 			for report_reason, mod_name in item.mod_reports:
 				items = report_reason.split(" ")
 				if items[0].lower() == "r1":
 					days = None
 					if len(items) > 1:
-						try:
-							days = int(items[1])
-						except ValueError:
-							pass
+						if items[1] == 'w':
+							days = 0
+						elif items[1] == 'p':
+							days = -1
+						else:
+							try:
+								days = int(items[1])
+							except ValueError:
+								pass
 
-					utils.warn_ban_user(item.author, mod_name, subreddit, days, item.permalink)
+					sub_notes = utils.get_usernotes(subreddit)
+					username = item.author.name
+					user_note = sub_notes.get_user_note(username)
+					if days is None:
+						if user_note is not None:
+							days_ban, note_is_old = user_note.get_recent_warn_ban()
+						else:
+							days_ban, note_is_old = None, False
+						days = subreddit.get_next_ban_tier(days_ban, note_is_old)
+
+					item_link = f"https://www.reddit.com{item.permalink}"
+					if days == 0:
+						log.info(f"Warning u/{username}, rule 1 from u/{mod_name}")
+						item.author.message(
+							"Rule 1 warning",
+							f"No poor or abusive behavior\n\n{item_link}\n\nFrom u/{mod_name}",
+							from_subreddit=subreddit.name)
+						note = Note.build_note(sub_notes, mod_name, "abusewarn", "abusive comment", datetime.utcnow(), item_link)
+					else:
+						if days == -1:
+							log.warning(f"Banning u/{username} permanently, rule 1 from u/{mod_name}")
+							subreddit.banned.add(
+								item.author,
+								ban_reason=f"abusive commment u/{mod_name}",
+								ban_message=f"No poor or abusive behavior\n\n{item_link}\n\nFrom u/{mod_name}")
+							note = Note.build_note(sub_notes, mod_name, "permban", f"abusive comment", datetime.utcnow(), item_link)
+						else:
+							log.info(f"Banning u/{username} for {days} days, rule 1 from u/{mod_name}")
+							subreddit.banned.add(
+								item.author,
+								duration=days,
+								ban_reason=f"abusive commment u/{mod_name}",
+								ban_message=f"No poor or abusive behavior\n\n{item_link}\n\nFrom u/{mod_name}")
+							note = Note.build_note(sub_notes, mod_name, "ban", f"{days}d - abusive comment", datetime.utcnow(), item_link)
+
+					if user_note is not None:
+						user_note.add_new_note(note)
+					else:
+						user_note = UserNotes(username)
+						user_note.add_new_note(note)
+						sub_notes.add_update_user_note(user_note)
+					utils.save_usernotes(subreddit, sub_notes, f"\"create new note on user {username}\" via OWMatchThreads")
+
 					count_removed = utils.recursive_remove_comments(item)
 					if count_removed > 1:
 						log.info(f"Recursively removed {count_removed} comments")
 					subreddit.modqueue().remove(item)
 					break
 
+
+def process_modqueue_submissions(subreddit):
+	for item in list(subreddit.modqueue()):
 		if len(subreddit.report_reasons) and item.fullname.startswith("t3_") and len(item.mod_reports):
 			for report_reason, mod_name in item.mod_reports:
 				if report_reason in subreddit.report_reasons:

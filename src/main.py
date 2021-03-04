@@ -44,11 +44,12 @@ if __name__ == "__main__":
 	if args.debug:
 		discord_logging.set_level(logging.DEBUG)
 
-	discord_logging.init_discord_logging("OWMatchThreads", logging.WARNING, 1)
+	praw_file = discord_logging.get_config()
+	discord_logging.init_discord_logging("QueueBot", logging.WARNING, 1, logging_webhook=discord_logging.get_config_var(praw_file, "global", 'queue_webhook'))
 	database.init()
 
 	instances = {}
-	for username in ['OWMatchThreads', 'Watchful1']:
+	for username in ['OWMatchThreads', 'CustomModBot']:
 		try:
 			instances[username] = praw.Reddit(username, user_agent=static.USER_AGENT)
 			log.info(f"Logged into reddit as /u/{instances[username].user.me().name}")
@@ -64,6 +65,7 @@ if __name__ == "__main__":
 		"CompetitiveOverwatch",
 		instances['OWMatchThreads'],
 		static.COMPOW_MODERATORS,
+		known_log_types=static.COMPOW_KNOWN_LOG_TYPES,
 		warning_log_types=static.COMPOW_WARNING_LOG_TYPES,
 		report_reasons=static.COMPOW_REPORT_REASONS,
 		reapprove_reasons=['#2 No Off-Topic or Low-Value Content', 'This is spam'],
@@ -74,12 +76,14 @@ if __name__ == "__main__":
 			'modmail': {'track': True, 'post': 5, 'ping': 8},
 			'modmail_hours': {'post': 12, 'ping': 24},
 		},
-		webhook=discord_logging.get_config_var(discord_logging.get_config(), "OWMatchThreads", 'webhook_redditmodtalk')
+		webhook=discord_logging.get_config_var(praw_file, "OWMatchThreads", 'webhook_redditmodtalk')
 	)
 	bay_area = Subreddit(
 		"bayarea",
 		instances['Watchful1'],
 		static.BAYAREA_MODERATORS,
+		known_log_types=static.BAYAREA_KNOWN_LOG_TYPES,
+		warning_log_types=static.BAYAREA_WARNING_LOG_TYPES,
 		thresholds={
 			'unmod': {'track': False},
 			'modqueue': {'track': True},
@@ -88,16 +92,18 @@ if __name__ == "__main__":
 	)
 
 	while True:
+		loop_time = time.perf_counter()
 		try:
-			startTime = time.perf_counter()
 			log.debug("Starting run")
 
 			for subreddit in [comp_ow, bay_area]:
 				subreddit.clear_cache()
 				shared.ingest_log(subreddit, database)
+				shared.process_modqueue_comments(subreddit)
 
 			for subreddit in [comp_ow]:
-				shared.process_modqueue(subreddit)
+				shared.process_modqueue_reapprove(subreddit)
+				shared.process_modqueue_submissions(subreddit)
 				shared.log_highlighted_modmail(subreddit, start_time)
 				shared.log_archived_modmail_no_response(subreddit, start_time)
 
@@ -109,10 +115,13 @@ if __name__ == "__main__":
 
 			for subreddit in [comp_ow]:
 				shared.ping_queues(subreddit, database)
-
-			log.debug("Run complete after: %d", int(time.perf_counter() - startTime))
 		except Exception as err:
 			utils.process_error(f"Hit an error in main loop", err, traceback.format_exc())
+
+		delta_time = time.perf_counter() - loop_time
+		counters.loop_time.observe(round(delta_time, 2))
+
+		log.debug("Run complete after: %d", int(delta_time))
 
 		database.session.commit()
 		discord_logging.flush_discord()
