@@ -25,6 +25,8 @@ In all cases, the message to the user includes a link to the infringing comment.
 * Removes the comment and all child comments
 * Archives the modmail message that was generated
 
+**Notably this whole thing only works if the comment is not already removed. If it is, you can approve it, then report it and the bot will remove it again**
+
 ### Count queue sizes
 Counts the size of the unmod and mod queues, as well as the number of modmails, plus the age in hours of the oldest item in unmod and the oldest modmail. These are then saved as a metric over time.
 
