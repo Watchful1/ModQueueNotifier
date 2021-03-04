@@ -13,7 +13,7 @@ Checks the modqueue for any comments that have been reported by a moderator wher
 * `r1 w` sends a modmail to the user warning them for breaking the rules
 * `r1 3` bans the user for 3 days, works for any number of days
 * `r1 p` permabans the user
-* `r1` reads the users toolbox usernotes to determine the length of their most recent ban, then bans them based on the next tier below.
+* `r1` reads the users toolbox usernotes to determine the length of their most recent ban, then bans them based on the next tier below. If the most recent action was more than 6 months ago, uses the same tier instead of going to the next one.
   * Warning
   * 3 day ban
   * 7 day ban
