@@ -47,28 +47,21 @@ def parse_modmail(subreddit):
 	for conversation in list(subreddit.all_modmail()):
 		archive = None
 		if len(conversation.authors) == 1 and \
-				conversation.authors[0].name in {"AutoModerator", "OWMatchThreads"} and \
+				conversation.authors[0].name in {"AutoModerator"} and \
 				len(conversation.messages) == 1:
-			if conversation.authors[0].name == "OWMatchThreads":
-				archive = "OWMatchThreads"
-			else:
-				links = re.findall(r'(?:reddit.com/r/\w*/comments/)(\w*)', conversation.messages[0].body_markdown)
-				if len(links) == 1:
-					submission = subreddit.reddit.submission(links[0])
-					if submission.selftext == "[deleted]" or submission.author == "[deleted]":
-						archive = "Deleted by user"
-					elif submission.locked or submission.removed:
-						if len(submission.comments) and submission.comments[0].stickied:
-							archive = f"Removed by u/{submission.comments[0].author.name}"
-					elif submission.approved:
-						archive = f"Approved by u/{submission.approved_by}"
+			links = re.findall(r'(?:reddit.com/r/\w*/comments/)(\w*)', conversation.messages[0].body_markdown)
+			if len(links) == 1:
+				submission = subreddit.reddit.submission(links[0])
+				if submission.selftext == "[deleted]" or submission.author == "[deleted]":
+					archive = "Deleted by user"
+				elif submission.locked or submission.removed:
+					if len(submission.comments) and submission.comments[0].stickied:
+						archive = f"Removed by u/{submission.comments[0].author.name}"
+				elif submission.approved:
+					archive = f"Approved by u/{submission.approved_by}"
 
-		if archive is not None:
-			if archive == "OWMatchThreads":
-				log.info(f"Archiving OWMatchThreads message: {conversation.id}")
-				conversation.archive()
-			else:
+			if archive is not None:
 				log.info(f"Archiving automod notification: {conversation.id}")
 				conversation.reply(archive, internal=True)
 				conversation.archive()
-			subreddit.all_modmail().remove(conversation)
+				subreddit.all_modmail().remove(conversation)

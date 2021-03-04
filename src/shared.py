@@ -116,6 +116,15 @@ def process_modqueue_comments(subreddit):
 							"Rule 1 warning",
 							f"No poor or abusive behavior\n\n{item_link}\n\nFrom u/{mod_name}",
 							from_subreddit=subreddit.name)
+						for conversation in list(subreddit.all_modmail()):
+							if len(conversation.authors) == 1 and \
+									conversation.authors[0].name in {"CustomModBot", "OWMatchThreads"} and \
+									len(conversation.messages) == 1:
+								log.info(f"Archiving {conversation.authors[0].name} message: {conversation.id}")
+								conversation.archive()
+								subreddit.all_modmail().remove(conversation)
+								break
+
 						note = Note.build_note(sub_notes, mod_name, "abusewarn", "abusive comment", datetime.utcnow(), item_link)
 					else:
 						if days == -1:
