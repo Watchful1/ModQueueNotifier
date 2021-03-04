@@ -80,7 +80,7 @@ if __name__ == "__main__":
 	)
 	bay_area = Subreddit(
 		"bayarea",
-		instances['Watchful1'],
+		instances['CustomModBot'],
 		static.BAYAREA_MODERATORS,
 		known_log_types=static.BAYAREA_KNOWN_LOG_TYPES,
 		warning_log_types=static.BAYAREA_WARNING_LOG_TYPES,
