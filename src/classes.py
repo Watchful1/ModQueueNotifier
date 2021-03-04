@@ -191,7 +191,7 @@ class SubredditNotes:
 
 	def get_user_note(self, username):
 		if username in self.all_notes:
-			return self.all_notes
+			return self.all_notes[username]
 		else:
 			return None
 
