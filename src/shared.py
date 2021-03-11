@@ -88,17 +88,21 @@ def process_modqueue_comments(subreddit):
 				items = report_reason.split(" ")
 				if items[0].lower() == "r1":
 					days = None
+					action_string = "error, invalid action"
 					if len(items) > 1:
 						if items[1] == 'w':
 							log.info(f"Processing new warning comment report: {report_reason}")
 							days = 0
+							action_string = "warned"
 						elif items[1] == 'p':
 							log.info(f"Processing new permaban comment report: {report_reason}")
 							days = -1
+							action_string = "permabanned"
 						else:
 							try:
 								days = int(items[1])
 								log.info(f"Processing new {days} day ban comment report: {report_reason}")
+								action_string = f"banned for {days} days"
 							except ValueError:
 								pass
 
@@ -113,6 +117,12 @@ def process_modqueue_comments(subreddit):
 							days_ban, note_is_old = None, False
 							log.info(f"Processing new comment report: {report_reason}. No usernotes")
 						days = subreddit.get_next_ban_tier(days_ban, note_is_old)
+						if days == -1:
+							action_string = "permabanned based on usernotes"
+						elif days == 0:
+							action_string = "warned based on usernotes"
+						else:
+							action_string = f"banned for {days} days based on usernotes"
 
 					item_link = f"https://www.reddit.com{item.permalink}"
 					if days == 0:
@@ -159,6 +169,9 @@ def process_modqueue_comments(subreddit):
 					count_removed = utils.recursive_remove_comments(item)
 					if count_removed > 1:
 						log.info(f"Recursively removed {count_removed} comments")
+
+					log.warning(f"r/{subreddit.name}:u/{mod_name}: u/{username} {action_string}")
+
 					subreddit.modqueue().remove(item)
 					break
 

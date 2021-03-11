@@ -239,7 +239,7 @@ class UserNotes:
 			self.notes = []
 
 	def add_new_note(self, note):
-		log.warning(f"Added new note to u/{self.username} : {str(note.to_dict())}")
+		log.info(f"Added new note to u/{self.username} : {str(note.to_dict())}")
 		self.notes.insert(0, note)
 
 	def __str__(self):

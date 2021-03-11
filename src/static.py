@@ -37,7 +37,7 @@ BAYAREA_MODERATORS = {
 	"which_objective",
 	"MsNewKicks",
 	"AutoModerator",
-	"BotDefense",
+	"CustomModBot",
 }
 
 COMPOW_KNOWN_LOG_TYPES = {
