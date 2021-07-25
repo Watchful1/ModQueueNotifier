@@ -17,6 +17,7 @@ class Subreddit:
 			known_log_types=None,
 			warning_log_types=None,
 			report_reasons=None,
+			comment_report_reasons=None,
 			reapprove_reasons=None,
 			thresholds=None,
 			webhook=None
@@ -28,6 +29,7 @@ class Subreddit:
 		self.known_log_types = known_log_types
 		self.warning_log_types = warning_log_types
 		self.report_reasons = report_reasons
+		self.comment_report_reasons = comment_report_reasons
 		self.reapprove_reasons = reapprove_reasons
 		self.thresholds = thresholds
 		self.webhook = webhook

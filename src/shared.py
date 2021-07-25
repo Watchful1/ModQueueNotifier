@@ -86,7 +86,8 @@ def process_modqueue_comments(subreddit):
 		if item.fullname.startswith("t1_") and len(item.mod_reports):
 			for report_reason, mod_name in item.mod_reports:
 				items = report_reason.split(" ")
-				if items[0].lower() == "r1":
+				if items[0].lower() in subreddit.comment_report_reasons:
+					report_object = subreddit.comment_report_reasons[items[0].lower()]
 					days = None
 					action_string = "error, invalid action"
 					if len(items) > 1:
@@ -126,10 +127,10 @@ def process_modqueue_comments(subreddit):
 
 					item_link = f"https://www.reddit.com{item.permalink}"
 					if days == 0:
-						log.info(f"Warning u/{username}, rule 1 from u/{mod_name}")
+						log.info(f"Warning u/{username}, rule {report_object['rule']} from u/{mod_name}")
 						item.author.message(
-							"Rule 1 warning",
-							f"No poor or abusive behavior\n\n{item_link}\n\nFrom u/{mod_name}",
+							f"Rule {report_object['rule']} warning",
+							f"{report_object['reason']}\n\n{item_link}\n\nFrom u/{mod_name}",
 							from_subreddit=subreddit.name)
 						for conversation in list(subreddit.all_modmail()):
 							if len(conversation.authors) == 1 and \
@@ -140,23 +141,23 @@ def process_modqueue_comments(subreddit):
 								subreddit.all_modmail().remove(conversation)
 								break
 
-						note = Note.build_note(sub_notes, mod_name, "abusewarn", "abusive comment", datetime.utcnow(), item_link)
+						note = Note.build_note(sub_notes, mod_name, "abusewarn", report_object['short_reason'], datetime.utcnow(), item_link)
 					else:
 						if days == -1:
-							log.warning(f"Banning u/{username} permanently, rule 1 from u/{mod_name}")
+							log.warning(f"Banning u/{username} permanently, rule {report_object['rule']} from u/{mod_name}")
 							subreddit.sub_object.banned.add(
 								item.author,
-								ban_reason=f"abusive commment u/{mod_name}",
-								ban_message=f"No poor or abusive behavior\n\n{item_link}\n\nFrom u/{mod_name}")
-							note = Note.build_note(sub_notes, mod_name, "permban", f"abusive comment", datetime.utcnow(), item_link)
+								ban_reason=f"{report_object['short_reason']} u/{mod_name}",
+								ban_message=f"{report_object['reason']}\n\n{item_link}\n\nFrom u/{mod_name}")
+							note = Note.build_note(sub_notes, mod_name, "permban", report_object['short_reason'], datetime.utcnow(), item_link)
 						else:
-							log.info(f"Banning u/{username} for {days} days, rule 1 from u/{mod_name}")
+							log.info(f"Banning u/{username} for {days} days, rule {report_object['rule']} from u/{mod_name}")
 							subreddit.sub_object.banned.add(
 								item.author,
 								duration=days,
-								ban_reason=f"abusive commment u/{mod_name}",
-								ban_message=f"No poor or abusive behavior\n\n{item_link}\n\nFrom u/{mod_name}")
-							note = Note.build_note(sub_notes, mod_name, "ban", f"{days}d - abusive comment", datetime.utcnow(), item_link)
+								ban_reason=f"{report_object['short_reason']} u/{mod_name}",
+								ban_message=f"{report_object['reason']}\n\n{item_link}\n\nFrom u/{mod_name}")
+							note = Note.build_note(sub_notes, mod_name, "ban", f"{days}d - {report_object['short_reason']}", datetime.utcnow(), item_link)
 
 					if user_note is not None:
 						user_note.add_new_note(note)

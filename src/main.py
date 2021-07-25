@@ -68,6 +68,7 @@ if __name__ == "__main__":
 		known_log_types=static.COMPOW_KNOWN_LOG_TYPES,
 		warning_log_types=static.COMPOW_WARNING_LOG_TYPES,
 		report_reasons=static.COMPOW_REPORT_REASONS,
+		comment_report_reasons=static.COMPOW_COMMENT_REPORT_REASONS,
 		reapprove_reasons=['#2 No Off-Topic or Low-Value Content', 'This is spam'],
 		thresholds={
 			'unmod': {'track': True, 'post': 15, 'ping': 20},
@@ -84,6 +85,7 @@ if __name__ == "__main__":
 		static.BAYAREA_MODERATORS,
 		known_log_types=static.BAYAREA_KNOWN_LOG_TYPES,
 		warning_log_types=static.BAYAREA_WARNING_LOG_TYPES,
+		comment_report_reasons=static.BAYAREA_COMMENT_REPORT_REASONS,
 		thresholds={
 			'unmod': {'track': False},
 			'modqueue': {'track': True},

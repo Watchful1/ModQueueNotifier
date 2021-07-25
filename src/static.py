@@ -38,6 +38,7 @@ BAYAREA_MODERATORS = {
 	"MsNewKicks",
 	"AutoModerator",
 	"CustomModBot",
+	"BotDefense",
 }
 
 COMPOW_KNOWN_LOG_TYPES = {
@@ -197,4 +198,19 @@ The exception is made for video memes (for example, Overwatch related text and i
 	"dupe":
 		{"rule": "10", "reason": """>Someone else has posted about this topic recently. Occasionally we may pick an alternative thread if it has more discussion, even if it's not the first thread on a subject."""
 		},
+}
+
+COMPOW_COMMENT_REPORT_REASONS = {
+	"r1":
+		{"rule": "1", "reason": "No poor or abusive behavior"
+		}
+}
+
+BAYAREA_COMMENT_REPORT_REASONS = {
+	"r1":
+		{"rule": "1", "reason": "No hateful or mean-spirited comments", "short_reason": "abusive comment"
+		},
+	"r5":
+		{"rule": "5", "reason": "No vaccine misinformation https://redd.it/oq2vtx", "short_reason": "vaccine misinfo"
+		}
 }
