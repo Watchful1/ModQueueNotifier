@@ -202,7 +202,7 @@ The exception is made for video memes (for example, Overwatch related text and i
 
 COMPOW_COMMENT_REPORT_REASONS = {
 	"r1":
-		{"rule": "1", "reason": "No poor or abusive behavior"
+		{"rule": "1", "reason": "No poor or abusive behavior", "short_reason": "abusive comment"
 		}
 }
 
