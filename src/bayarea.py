@@ -83,8 +83,6 @@ def ingest_comments(subreddit, database):
 		if database.session.query(Comment).filter_by(comment_id=comment.id).count() > 0:
 			break
 
-		counters.user_comments.labels(subreddit=subreddit.name).inc()
-
 		db_submission = database.session.query(Submission).filter_by(submission_id=comment.link_id[3:]).first()
 		if db_submission is None:
 			db_submission = add_submission(subreddit, database, None, comment.submission)
@@ -103,9 +101,12 @@ def ingest_comments(subreddit, database):
 
 		author_result = author_restricted(subreddit, database, comment.author.name)
 		if author_result is not None:
+			counters.user_comments.labels(subreddit=subreddit.name, result="filtered").inc()
 			comment.mod.remove()
 			db_comment.is_removed = True
 			log.info(f"Comment {comment.comment_id} by u/{comment.author.name} removed: {author_result}")
+		else:
+			counters.user_comments.labels(subreddit=subreddit.name, result="allowed").inc()
 
 
 def check_flair_changes(subreddit, database):
