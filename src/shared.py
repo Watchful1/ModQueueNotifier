@@ -14,9 +14,12 @@ from classes import UserNotes, Note
 
 
 def ingest_log(subreddit, database):
+	subreddit.mod_log = []
 	for log_item in subreddit.sub_object.mod.log(limit=None):
 		if database.session.query(LogItem).filter_by(id=log_item.id).count() > 0:
 			break
+
+		subreddit.mod_log.append(log_item)
 
 		counters.mod_actions.labels(moderator=log_item.mod.name, subreddit=subreddit.name).inc()
 

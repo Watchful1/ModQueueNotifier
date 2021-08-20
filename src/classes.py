@@ -20,7 +20,8 @@ class Subreddit:
 			comment_report_reasons=None,
 			reapprove_reasons=None,
 			thresholds=None,
-			webhook=None
+			webhook=None,
+			restricted=None
 	):
 		self.name = name
 		self.reddit = reddit
@@ -33,6 +34,7 @@ class Subreddit:
 		self.reapprove_reasons = reapprove_reasons
 		self.thresholds = thresholds
 		self.webhook = webhook
+		self.restricted = restricted
 
 		self.sub_object = reddit.subreddit(self.name)
 		self.post_checked = datetime.utcnow()
@@ -51,6 +53,7 @@ class Subreddit:
 		self._all_modmail = None
 		self._archived_modmail = None
 		self._appeal_modmail = None
+		self.mod_log = []
 
 		self.ban_tiers = [
 			0,
@@ -136,6 +139,11 @@ class Subreddit:
 		self.reported_count = 0
 		self.oldest_modmail_hours = None
 		self.oldest_unmod_hours = None
+
+	def flair_restricted(self, flair):
+		if self.restricted['flairs'] is None:
+			return False
+		return flair in self.restricted['flairs']
 
 
 class SubredditNotes:

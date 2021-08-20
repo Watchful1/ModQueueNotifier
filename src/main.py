@@ -18,6 +18,7 @@ import counters
 import static
 import utils
 import shared
+import bayarea
 import compow
 from classes import Subreddit
 
@@ -91,6 +92,12 @@ if __name__ == "__main__":
 			'modqueue': {'track': True},
 			'modmail': {'track': True},
 		},
+		restricted={
+			'flairs': {"Politics", "COVID19", "Local Crime"},
+			'comment_days': 30,
+			'comments': 20,
+			'karma': 20
+		}
 	)
 
 	while True:
@@ -111,6 +118,11 @@ if __name__ == "__main__":
 
 				compow.process_submissions(subreddit)
 				compow.parse_modmail(subreddit)
+
+			for subreddit in [bay_area]:
+				bayarea.ingest_comments(subreddit, database)
+				bayarea.check_flair_changes(subreddit, database)
+				bayarea.backfill_karma(subreddit, database)
 
 			for subreddit in [comp_ow, bay_area]:
 				shared.count_queues(subreddit)

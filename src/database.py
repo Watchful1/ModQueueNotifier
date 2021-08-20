@@ -1,6 +1,6 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, String, DateTime
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, Column, String, DateTime, Integer, ForeignKey, Boolean
+from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
 
 
@@ -38,6 +38,81 @@ class LogItem(Base):
 		self.target_body = log_item.target_body
 		self.description = log_item.description
 		self.subreddit = log_item.subreddit
+
+
+class User(Base):
+	__tablename__ = 'users'
+
+	id = Column(Integer, primary_key=True)
+	name = Column(String(80, collation="NOCASE"), nullable=False, unique=True)
+	is_deleted = Column(Boolean, nullable=False)
+
+	def __init__(
+		self,
+		name,
+		is_deleted=False
+	):
+		self.name = name
+		self.is_deleted = is_deleted
+
+	def __str__(self):
+		return f"u/{self.name}"
+
+
+class Submission(Base):
+	__tablename__ = 'submissions'
+
+	id = Column(Integer, primary_key=True)
+	submission_id = Column(String(12), nullable=False, unique=True)
+	is_restricted = Column(Boolean, nullable=False)
+	created = Column(DateTime, nullable=False)
+
+	def __init__(
+		self,
+		submission_id,
+		created,
+		is_restricted
+	):
+		self.submission_id = submission_id
+		self.created = created
+		self.is_restricted = is_restricted
+
+	def __str__(self):
+		return self.submission_id
+
+
+class Comment(Base):
+	__tablename__ = 'comments'
+
+	id = Column(Integer, primary_key=True)
+	comment_id = Column(String(12), nullable=False, unique=True)
+	author_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+	submission_id = Column(String(12), ForeignKey('submissions.id'), nullable=False)
+	created = Column(DateTime, nullable=False)
+	karma = Column(Integer)
+	is_removed = Column(Boolean, nullable=False)
+	is_deleted = Column(Boolean, nullable=False)
+
+	author = relationship("User", lazy="joined")
+	submission = relationship("Submission", lazy="joined")
+
+	def __init__(
+		self,
+		comment_id,
+		author,
+		submission,
+		created
+	):
+		self.comment_id = comment_id
+		self.author = author
+		self.submission = submission
+		self.created = created
+		self.karma = None
+		self.is_removed = False
+		self.is_deleted = False
+
+	def __str__(self):
+		return self.comment_id
 
 
 def init():
