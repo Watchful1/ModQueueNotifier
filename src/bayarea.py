@@ -99,7 +99,7 @@ def ingest_comments(subreddit, database):
 			created=datetime.utcfromtimestamp(comment.created_utc)
 		))
 
-		author_result = author_restricted(subreddit, database, comment.author.name)
+		author_result = author_restricted(subreddit, database, comment.author)
 		if author_result is not None:
 			counters.user_comments.labels(subreddit=subreddit.name, result="filtered").inc()
 			comment.mod.remove()
