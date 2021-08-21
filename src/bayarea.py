@@ -122,7 +122,11 @@ def check_flair_changes(subreddit, database):
 
 
 def backfill_karma(subreddit, database):
-	comments = database.session.query(Comment).filter_by(karma=None).all()
+	max_comment_date = datetime.utcnow() - timedelta(hours=24)
+	comments = database.session.query(Comment)\
+		.filter(Comment.karma == None)\
+		.filter(Comment.created < max_comment_date)\
+		.all()
 	fullnames = []
 	comment_map = {}
 	for comment in comments:
