@@ -105,7 +105,7 @@ def ingest_comments(subreddit, database):
 				counters.user_comments.labels(subreddit=subreddit.name, result="filtered").inc()
 				comment.mod.remove()
 				db_comment.is_removed = True
-				log.info(f"Comment {comment.comment_id} by u/{comment.author.name} removed: {author_result}")
+				log.info(f"Comment {comment.id} by u/{comment.author.name} removed: {author_result}")
 			else:
 				counters.user_comments.labels(subreddit=subreddit.name, result="allowed").inc()
 		else:
