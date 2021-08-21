@@ -99,12 +99,15 @@ def ingest_comments(subreddit, database):
 			created=datetime.utcfromtimestamp(comment.created_utc)
 		))
 
-		author_result = author_restricted(subreddit, database, comment.author)
-		if author_result is not None:
-			counters.user_comments.labels(subreddit=subreddit.name, result="filtered").inc()
-			comment.mod.remove()
-			db_comment.is_removed = True
-			log.info(f"Comment {comment.comment_id} by u/{comment.author.name} removed: {author_result}")
+		if db_submission.is_restricted:
+			author_result = author_restricted(subreddit, database, comment.author)
+			if author_result is not None:
+				counters.user_comments.labels(subreddit=subreddit.name, result="filtered").inc()
+				comment.mod.remove()
+				db_comment.is_removed = True
+				log.info(f"Comment {comment.comment_id} by u/{comment.author.name} removed: {author_result}")
+			else:
+				counters.user_comments.labels(subreddit=subreddit.name, result="allowed").inc()
 		else:
 			counters.user_comments.labels(subreddit=subreddit.name, result="allowed").inc()
 
