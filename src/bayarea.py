@@ -69,7 +69,7 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				if author_result is None:
 					continue
 				else:
-					subreddit.reddit.comment(comment.comment_id).mod.remove()
+					subreddit.reddit.comment(comment.comment_id).mod.remove(mod_note=f"filtered: {author_result}")
 					comment.is_removed = True
 					count_removed += 1
 					log.info(f"Comment {comment.comment_id} by u/{comment.author.name} removed: {author_result}")
@@ -103,7 +103,7 @@ def ingest_comments(subreddit, database):
 			author_result = author_restricted(subreddit, database, db_user)
 			if author_result is not None:
 				counters.user_comments.labels(subreddit=subreddit.name, result="filtered").inc()
-				comment.mod.remove()
+				comment.mod.remove(mod_note=f"filtered: {author_result}")
 				db_comment.is_removed = True
 				log.info(f"Comment {comment.id} by u/{comment.author.name} removed: {author_result}")
 			else:
