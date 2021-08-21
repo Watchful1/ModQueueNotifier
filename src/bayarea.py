@@ -100,7 +100,7 @@ def ingest_comments(subreddit, database):
 		))
 
 		if db_submission.is_restricted:
-			author_result = author_restricted(subreddit, database, comment.author)
+			author_result = author_restricted(subreddit, database, db_user)
 			if author_result is not None:
 				counters.user_comments.labels(subreddit=subreddit.name, result="filtered").inc()
 				comment.mod.remove()
