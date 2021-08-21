@@ -66,7 +66,7 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 					author_result = author_restricted(subreddit, database, comment.author)
 					author_dict[comment.author.name] = author_result
 
-				if author_result is None:
+				if author_result is None or comment.author.name == "CustomModBot":
 					continue
 				else:
 					subreddit.reddit.comment(comment.comment_id).mod.remove(mod_note=f"filtered: {author_result}")
@@ -99,7 +99,7 @@ def ingest_comments(subreddit, database):
 			created=datetime.utcfromtimestamp(comment.created_utc)
 		))
 
-		if db_submission.is_restricted:
+		if db_submission.is_restricted and comment.author.name != "CustomModBot":
 			author_result = author_restricted(subreddit, database, db_user)
 			if author_result is not None:
 				counters.user_comments.labels(subreddit=subreddit.name, result="filtered").inc()
