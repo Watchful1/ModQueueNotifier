@@ -19,6 +19,7 @@ Checks the modqueue for any comments that have been reported by a moderator wher
   * 7 day ban
   * 14 day ban
   * Permaban 
+* `r1 w no calling people retards` or `r1 no calling people retards` will include the additional note "no calling people retards" in the warning or ban message
 
 In all cases, the message to the user includes a link to the infringing comment. The bot also 
 
@@ -67,3 +68,7 @@ If the submission is approved, but doesn't have a flair set, pings the mod who d
 
 ### Process modmails - only in r/competitiveoverwatch
 Checks modmail for notifications from automod that a post has gotten three reports, then checks the post in question. If the post was deleted, removed or approved, replies to the modmail with the action and then archives it
+
+### Filter comments from new users - only in r/bayarea
+
+Track all comments made to the subreddit, then in threads with certain flairs, remove comments from users that don't have a long history

@@ -93,6 +93,7 @@ def process_modqueue_comments(subreddit):
 					report_object = subreddit.comment_report_reasons[items[0].lower()]
 					days = None
 					action_string = "error, invalid action"
+					additional_note = None
 					if len(items) > 1:
 						if items[1] == 'w':
 							log.info(f"Processing new warning comment report: {report_reason}")
@@ -108,7 +109,11 @@ def process_modqueue_comments(subreddit):
 								log.info(f"Processing new {days} day ban comment report: {report_reason}")
 								action_string = f"banned for {days} days"
 							except ValueError:
+								additional_note = ' '.join(items[1:])
 								pass
+
+					if additional_note is None and len(items) > 2:
+						additional_note = ' '.join(items[2:])
 
 					sub_notes = utils.get_usernotes(subreddit)
 					username = item.author.name
@@ -129,11 +134,14 @@ def process_modqueue_comments(subreddit):
 							action_string = f"banned for {days} days based on usernotes"
 
 					item_link = f"https://www.reddit.com{item.permalink}"
+					reason_text = report_object['reason']
+					if additional_note is not None:
+						reason_text = reason_text + "\n\n" + additional_note
 					if days == 0:
 						log.info(f"Warning u/{username}, rule {report_object['rule']} from u/{mod_name}")
 						item.author.message(
 							f"Rule {report_object['rule']} warning",
-							f"{report_object['reason']}\n\n{item_link}\n\nFrom u/{mod_name}",
+							f"{reason_text}\n\n{item_link}\n\nFrom u/{mod_name}",
 							from_subreddit=subreddit.name)
 						for conversation in list(subreddit.all_modmail()):
 							if len(conversation.authors) == 1 and \
@@ -151,7 +159,7 @@ def process_modqueue_comments(subreddit):
 							subreddit.sub_object.banned.add(
 								item.author,
 								ban_reason=f"{report_object['short_reason']} u/{mod_name}",
-								ban_message=f"{report_object['reason']}\n\n{item_link}\n\nFrom u/{mod_name}")
+								ban_message=f"{reason_text}\n\n{item_link}\n\nFrom u/{mod_name}")
 							note = Note.build_note(sub_notes, mod_name, "permban", report_object['short_reason'], datetime.utcnow(), item_link)
 						else:
 							log.info(f"Banning u/{username} for {days} days, rule {report_object['rule']} from u/{mod_name}")
@@ -159,7 +167,7 @@ def process_modqueue_comments(subreddit):
 								item.author,
 								duration=days,
 								ban_reason=f"{report_object['short_reason']} u/{mod_name}",
-								ban_message=f"{report_object['reason']}\n\n{item_link}\n\nFrom u/{mod_name}")
+								ban_message=f"{reason_text}\n\n{item_link}\n\nFrom u/{mod_name}")
 							note = Note.build_note(sub_notes, mod_name, "ban", f"{days}d - {report_object['short_reason']}", datetime.utcnow(), item_link)
 
 					if user_note is not None:
