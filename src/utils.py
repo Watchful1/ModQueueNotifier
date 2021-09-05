@@ -60,7 +60,10 @@ def get_usernotes(subreddit):
 
 def save_usernotes(subreddit, sub_notes, change_reason):
 	json_dict = sub_notes.to_dict()
-	subreddit.sub_object.wiki['usernotes'].edit(json.dumps(json_dict), reason=change_reason)
+	try:
+		subreddit.sub_object.wiki['usernotes'].edit(json.dumps(json_dict), reason=change_reason)
+	except prawcore.exceptions.SpecialError:
+		log.warning(f"Failed to save usernotes for r/{subreddit.name}, SpecialError")
 
 
 def add_usernote(sub, user, mod_name, type, note_text, permalink):
