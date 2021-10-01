@@ -187,16 +187,17 @@ The exception is made for video memes (for example, Overwatch related text and i
 
 > All other clips and videos are subject to Rule #2 instead."""
 		},
-	"#8 AMAs":
-		{"rule": "8", "reason": """>All AMA (Ask Me Anything) posts must be pre-approved by the mod team without exception. Any posted without approval will be removed.
+	"#8 No Misleading Titles":
+		{"rule": "8", "reason": """> Titles of posts cannot be misleading, including in the following ways:
 
->AMA posts can only be requested by players, coaches, teams, and/or other community figures."""
+> * Titles cannot falsely imply that an announcement is official.
+> * Titles cannot paraphrase or summarize in a way that misrepresents the content of the post."""
+		},
+	"#9 No duplicate posts":
+		{"rule": "9", "reason": """>Someone else has posted about this topic recently. Occasionally we may pick an alternative thread if it has more discussion, even if it's not the first thread on a subject."""
 		},
 	"offtopic":
-		{"rule": "9", "reason": """>This post doesn't relate to Competitive Overwatch or Overwatch esports."""
-		},
-	"dupe":
-		{"rule": "10", "reason": """>Someone else has posted about this topic recently. Occasionally we may pick an alternative thread if it has more discussion, even if it's not the first thread on a subject."""
+		{"rule": "10", "reason": """>This post doesn't relate to Competitive Overwatch or Overwatch esports."""
 		},
 }
 
