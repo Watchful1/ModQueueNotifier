@@ -78,8 +78,7 @@ if __name__ == "__main__":
 			'modmail': {'track': True, 'post': 5, 'ping': 8},
 			'modmail_hours': {'post': 12, 'ping': 24},
 		},
-		webhook=discord_logging.get_config_var(praw_file, "OWMatchThreads", 'webhook_redditmodtalk'),
-		backup_reddit=instances['OWMatchThreads']
+		webhook=discord_logging.get_config_var(praw_file, "OWMatchThreads", 'webhook_redditmodtalk')
 	)
 	bay_area = Subreddit(
 		"bayarea",
@@ -98,7 +97,8 @@ if __name__ == "__main__":
 			'comment_days': 30,
 			'comments': 20,
 			'karma': 20
-		}
+		},
+		backup_reddit=instances['Watchful1']
 	)
 
 	while True:
