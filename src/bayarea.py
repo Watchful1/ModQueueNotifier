@@ -1,4 +1,5 @@
 import discord_logging
+import prawcore.exceptions
 from sqlalchemy.sql import func
 from datetime import datetime, timedelta
 
@@ -49,7 +50,17 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 		bot_comment = reddit_submission.reply(
 			"Due to the topic, enhanced moderation has been turned on for this thread. Comments from users new "
 			"to r/bayarea will be automatically removed. See [this thread](https://www.reddit.com/r/bayarea/comments/p8hnzl/automatically_removing_comments_from_new_users_in/) for more details.")
-		bot_comment.mod.approve()
+		try:
+			bot_comment.mod.approve()
+		except prawcore.exceptions.Forbidden:
+			log.warning(f"Failed to approve comment, forbidden")
+			if subreddit.backup_reddit is not None:
+				try:
+					subreddit.backup_reddit.comment(id=bot_comment.id).mod.approve()
+					log.warning(f"Approved comment with backup reddit")
+				except Exception as e:
+					log.warning(f"Failed to approve comment with backup reddit, {e}")
+
 		bot_comment.mod.distinguish(how="yes", sticky=True)
 
 		comments = database.session.query(Comment)\
