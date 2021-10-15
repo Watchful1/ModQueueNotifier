@@ -50,7 +50,7 @@ if __name__ == "__main__":
 	database.init()
 
 	instances = {}
-	for username in ['OWMatchThreads', 'CustomModBot']:
+	for username in ['OWMatchThreads', 'CustomModBot', 'Watchful1']:
 		try:
 			instances[username] = praw.Reddit(username, user_agent=static.USER_AGENT)
 			log.info(f"Logged into reddit as /u/{instances[username].user.me().name}")
@@ -78,7 +78,8 @@ if __name__ == "__main__":
 			'modmail': {'track': True, 'post': 5, 'ping': 8},
 			'modmail_hours': {'post': 12, 'ping': 24},
 		},
-		webhook=discord_logging.get_config_var(praw_file, "OWMatchThreads", 'webhook_redditmodtalk')
+		webhook=discord_logging.get_config_var(praw_file, "OWMatchThreads", 'webhook_redditmodtalk'),
+		backup_reddit=instances['OWMatchThreads']
 	)
 	bay_area = Subreddit(
 		"bayarea",

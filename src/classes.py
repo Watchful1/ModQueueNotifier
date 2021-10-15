@@ -21,10 +21,12 @@ class Subreddit:
 			reapprove_reasons=None,
 			thresholds=None,
 			webhook=None,
-			restricted=None
+			restricted=None,
+			backup_reddit=None
 	):
 		self.name = name
 		self.reddit = reddit
+		self.backup_reddit = backup_reddit
 		self.moderators = moderators
 
 		self.known_log_types = known_log_types
