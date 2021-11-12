@@ -85,7 +85,7 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 					comment.is_removed = True
 					count_removed += 1
 					log.info(f"Comment {comment.comment_id} by u/{comment.author.name} removed: {author_result}")
-			log.warning(f"Finished submission https://www.reddit.com{reddit_submission.permalink}, removed {count_removed}/{len(comments)} comments")
+			log.warning(f"Finished submission <https://www.reddit.com{reddit_submission.permalink}>, removed {count_removed}/{len(comments)} comments")
 
 	return db_submission
 

@@ -230,8 +230,10 @@ def log_archived_modmail_no_response(subreddit, start_time):
 					conversation.last_mod_update) < utils.parse_modmail_datetime(
 					conversation.last_user_update)) and \
 				utils.conversation_not_processed(conversation, subreddit.processed_modmails, start_time):
-			log.warning(
-				f"Modmail archived without reply: https://mod.reddit.com/mail/arvhiced/{conversation.id}")
+			archived_by = conversation.mod_actions[-1].author.name
+			if archived_by != "Watchful1":
+				log.warning(
+					f"Modmail archived without reply: https://mod.reddit.com/mail/arvhiced/{conversation.id} by u/{archived_by}")
 			subreddit.processed_modmails[conversation.id] = utils.parse_modmail_datetime(conversation.last_updated)
 
 
