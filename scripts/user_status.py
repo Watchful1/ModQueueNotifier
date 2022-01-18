@@ -12,7 +12,7 @@ from database import Comment, User, Submission
 
 database.init()
 
-username = "AngryParsley"
+username = "Talx_abt_politix"
 log.info(f"Looking up u/{username}")
 db_author = database.session.query(User).filter_by(name=username).first()
 if db_author is None:

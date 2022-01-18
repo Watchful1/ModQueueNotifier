@@ -98,7 +98,8 @@ if __name__ == "__main__":
 			'comments': 20,
 			'karma': 20
 		},
-		backup_reddit=instances['Watchful1']
+		backup_reddit=instances['Watchful1'],
+		name_in_modmails=False
 	)
 
 	while True:
@@ -114,6 +115,7 @@ if __name__ == "__main__":
 			for subreddit in [comp_ow]:
 				shared.process_modqueue_reapprove(subreddit)
 				shared.process_modqueue_submissions(subreddit)
+				shared.process_modqueue_old(subreddit)
 				shared.log_highlighted_modmail(subreddit, start_time)
 				shared.log_archived_modmail_no_response(subreddit, start_time)
 

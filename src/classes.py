@@ -22,7 +22,8 @@ class Subreddit:
 			thresholds=None,
 			webhook=None,
 			restricted=None,
-			backup_reddit=None
+			backup_reddit=None,
+			name_in_modmails=True
 	):
 		self.name = name
 		self.reddit = reddit
@@ -37,6 +38,7 @@ class Subreddit:
 		self.thresholds = thresholds
 		self.webhook = webhook
 		self.restricted = restricted
+		self.name_in_modmails = name_in_modmails
 
 		self.sub_object = reddit.subreddit(self.name)
 		self.post_checked = datetime.utcnow()

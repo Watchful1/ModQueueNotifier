@@ -84,6 +84,14 @@ def process_modqueue_reapprove(subreddit):
 				subreddit.modqueue().remove(item)
 
 
+def process_modqueue_old(subreddit):
+	for item in list(subreddit.modqueue()):
+		item_date = datetime.utcfromtimestamp(item.created_utc)
+		if item_date < datetime.utcnow() - timedelta(days=180):
+			log.warning(f"[Old item in modqueue](https://www.reddit.com/{item.permalink}), automatically removing")
+			item.mod.remove()
+
+
 def process_modqueue_comments(subreddit):
 	for item in list(subreddit.modqueue()):
 		if item.fullname.startswith("t1_") and len(item.mod_reports):
@@ -137,11 +145,14 @@ def process_modqueue_comments(subreddit):
 					reason_text = report_object['reason']
 					if additional_note is not None:
 						reason_text = reason_text + "\n\n" + additional_note
+					warn_ban_message = f"{reason_text}\n\n{item_link}"
+					if subreddit.name_in_modmails:
+						warn_ban_message += f"\n\nFrom u/{mod_name}"
 					if days == 0:
 						log.info(f"Warning u/{username}, rule {report_object['rule']} from u/{mod_name}")
 						item.author.message(
 							f"Rule {report_object['rule']} warning",
-							f"{reason_text}\n\n{item_link}\n\nFrom u/{mod_name}",
+							warn_ban_message,
 							from_subreddit=subreddit.name)
 						for conversation in list(subreddit.all_modmail()):
 							if len(conversation.authors) == 1 and \
@@ -159,7 +170,7 @@ def process_modqueue_comments(subreddit):
 							subreddit.sub_object.banned.add(
 								item.author,
 								ban_reason=f"{report_object['short_reason']} u/{mod_name}",
-								ban_message=f"{reason_text}\n\n{item_link}\n\nFrom u/{mod_name}")
+								ban_message=warn_ban_message)
 							note = Note.build_note(sub_notes, mod_name, "permban", report_object['short_reason'], datetime.utcnow(), item_link)
 						else:
 							log.info(f"Banning u/{username} for {days} days, rule {report_object['rule']} from u/{mod_name}")
@@ -167,7 +178,7 @@ def process_modqueue_comments(subreddit):
 								item.author,
 								duration=days,
 								ban_reason=f"{report_object['short_reason']} u/{mod_name}",
-								ban_message=f"{reason_text}\n\n{item_link}\n\nFrom u/{mod_name}")
+								ban_message=warn_ban_message)
 							note = Note.build_note(sub_notes, mod_name, "ban", f"{days}d - {report_object['short_reason']}", datetime.utcnow(), item_link)
 
 					if user_note is not None:
