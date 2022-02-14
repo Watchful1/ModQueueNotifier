@@ -212,6 +212,6 @@ BAYAREA_COMMENT_REPORT_REASONS = {
 		{"rule": "1", "reason": "No hateful or mean-spirited comments", "short_reason": "abusive comment"
 		},
 	"r5":
-		{"rule": "5", "reason": "No covid misinformation https://redd.it/oq2vtx", "short_reason": "covid misinfo"
+		{"rule": "5", "reason": "No covid misinformation. Do not say anything that suggests people should not get the vaccine.", "short_reason": "covid misinfo"
 		}
 }
