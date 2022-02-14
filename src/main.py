@@ -9,7 +9,7 @@ import time
 import traceback
 import discord_logging
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 
 log = discord_logging.init_logging()
 
@@ -102,6 +102,7 @@ if __name__ == "__main__":
 		name_in_modmails=False
 	)
 
+	last_backup = None
 	while True:
 		loop_time = time.perf_counter()
 		try:
@@ -132,6 +133,14 @@ if __name__ == "__main__":
 
 			for subreddit in [comp_ow]:
 				shared.ping_queues(subreddit, database)
+
+			if last_backup is None or last_backup < datetime.utcnow() - timedelta(hours=24):
+				try:
+					database.backup()
+					last_backup = datetime.utcnow()
+				except Exception as err:
+					utils.process_error(f"Error backing up database", err, traceback.format_exc())
+
 		except Exception as err:
 			utils.process_error(f"Hit an error in main loop", err, traceback.format_exc())
 

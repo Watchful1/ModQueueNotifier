@@ -2,11 +2,15 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, Column, String, DateTime, Integer, ForeignKey, Boolean
 from sqlalchemy.orm import sessionmaker, relationship
 from datetime import datetime
+import os
+from shutil import copyfile
 
 
 Base = declarative_base()
 engine = None
 session = None
+backup_folder = "backup"
+database_name = "database.db"
 
 
 class LogItem(Base):
@@ -118,8 +122,27 @@ class Comment(Base):
 def init():
 	global engine
 	global session
-	engine = create_engine(f'sqlite:///database.db')
+	engine = create_engine(f'sqlite:///{database_name}')
 	session_maker = sessionmaker(bind=engine)
 	session = session_maker()
 	Base.metadata.create_all(engine)
 	session.commit()
+
+
+def backup():
+	global engine
+	global session
+	session.commit()
+	engine.dispose()
+
+	if not os.path.exists(backup_folder):
+		os.makedirs(backup_folder)
+
+	copyfile(
+		database_name,
+		backup_folder + "/" +
+			datetime.utcnow().strftime("%Y-%m-%d_%H-%M") +
+			".db"
+	)
+
+	init()
