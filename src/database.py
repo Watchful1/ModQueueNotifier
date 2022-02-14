@@ -70,7 +70,7 @@ class Submission(Base):
 	submission_id = Column(String(12), nullable=False, unique=True)
 	is_restricted = Column(Boolean, nullable=False)
 	created = Column(DateTime, nullable=False)
-	is_notified = Column(Boolean, nullable=False)
+	is_notified = Column(Boolean, nullable=False, default=False)
 
 	def __init__(
 		self,
