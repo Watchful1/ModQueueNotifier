@@ -136,6 +136,7 @@ if __name__ == "__main__":
 
 			if last_backup is None or last_backup < datetime.utcnow() - timedelta(hours=24):
 				try:
+					log.info("Backing up database")
 					database.backup()
 					last_backup = datetime.utcnow()
 				except Exception as err:
