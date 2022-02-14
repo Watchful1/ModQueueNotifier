@@ -29,7 +29,7 @@ COMPOW_MODERATORS = {
 }
 
 BAYAREA_MODERATORS = {
-	"dihydrogen_monoxide",
+	#"dihydrogen_monoxide",
 	"TrucyWright",
 	"stacysayshi",
 	"Watchful1",
