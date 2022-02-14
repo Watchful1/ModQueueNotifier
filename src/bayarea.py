@@ -132,7 +132,7 @@ def ingest_comments(subreddit, database):
 			counters.user_comments.labels(subreddit=subreddit.name, result="allowed").inc()
 
 			if not db_submission.is_notified:
-				age_in_hours = (datetime.utcnow() - db_submission.created).seconds / (60 * 60)
+				age_in_hours = int((datetime.utcnow() - db_submission.created).total_seconds()) / (60 * 60)
 				if age_in_hours < 2 and database.session.query(Comment).filter(Comment.submission == db_submission).count() > 50:
 					good_comments, bad_comments = get_comments_for_thread(subreddit, database, db_submission.submission_id)
 					log.warning(f"Non-moderated submission is {age_in_hours} hours with {len(good_comments)} good and {len(bad_comments)} bad comments: <https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>")
