@@ -70,6 +70,7 @@ class Submission(Base):
 	submission_id = Column(String(12), nullable=False, unique=True)
 	is_restricted = Column(Boolean, nullable=False)
 	created = Column(DateTime, nullable=False)
+	is_notified = Column(Boolean, nullable=False)
 
 	def __init__(
 		self,
@@ -80,6 +81,7 @@ class Submission(Base):
 		self.submission_id = submission_id
 		self.created = created
 		self.is_restricted = is_restricted
+		self.is_notified = False
 
 	def __str__(self):
 		return self.submission_id

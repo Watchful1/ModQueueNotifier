@@ -9,6 +9,29 @@ import counters
 from database import Comment, User, Submission
 
 
+def get_comments_for_thread(subreddit, database, thread_id):
+	comments = database.session.query(Comment) \
+		.join(Submission) \
+		.filter(Submission.submission_id == thread_id) \
+		.all()
+
+	author_dict = {}
+	good_comments = []
+	bad_comments = []
+	for comment in comments:
+		if comment.author.name in author_dict:
+			author_result = author_dict[comment.author.name]
+		else:
+			author_result = author_restricted(subreddit, database, comment.author)
+			author_dict[comment.author.name] = author_result
+
+		if author_result is None or comment.author.name == "CustomModBot":
+			good_comments.append((comment, "good"))
+		else:
+			bad_comments.append((comment, author_result))
+	return good_comments, bad_comments
+
+
 def author_restricted(subreddit, database, db_author):
 	min_comment_date = datetime.utcnow() - timedelta(days=subreddit.restricted['comment_days'])
 	count_comments = database.session.query(Comment)\
@@ -63,29 +86,14 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 
 		bot_comment.mod.distinguish(how="yes", sticky=True)
 
-		comments = database.session.query(Comment)\
-			.join(Submission)\
-			.filter(Submission.submission_id == reddit_submission.id)\
-			.all()
-		if len(comments) > 0:
-			log.info(f"Reprocessing submission {reddit_submission.id} with {len(comments)} comments")
-			author_dict = {}
-			count_removed = 0
-			for comment in comments:
-				if comment.author.name in author_dict:
-					author_result = author_dict[comment.author.name]
-				else:
-					author_result = author_restricted(subreddit, database, comment.author)
-					author_dict[comment.author.name] = author_result
+		good_comments, bad_comments = get_comments_for_thread(subreddit, database, reddit_submission.id)
+		log.info(f"Reprocessing submission {reddit_submission.id} with {len(good_comments) + len(bad_comments)} comments")
+		for comment, author_result in bad_comments:
+			subreddit.reddit.comment(comment.comment_id).mod.remove()
+			comment.is_removed = True
+			log.info(f"Comment {comment.comment_id} by u/{comment.author.name} removed: {author_result}")
 
-				if author_result is None or comment.author.name == "CustomModBot":
-					continue
-				else:
-					subreddit.reddit.comment(comment.comment_id).mod.remove(mod_note=f"filtered: {author_result}")
-					comment.is_removed = True
-					count_removed += 1
-					log.info(f"Comment {comment.comment_id} by u/{comment.author.name} removed: {author_result}")
-			log.warning(f"Finished submission <https://www.reddit.com{reddit_submission.permalink}>, removed {count_removed}/{len(comments)} comments")
+		log.warning(f"Finished submission <https://www.reddit.com{reddit_submission.permalink}>, removed {bad_comments}/{len(good_comments) + len(bad_comments)} comments")
 
 	return db_submission
 
@@ -122,6 +130,13 @@ def ingest_comments(subreddit, database):
 				counters.user_comments.labels(subreddit=subreddit.name, result="allowed").inc()
 		else:
 			counters.user_comments.labels(subreddit=subreddit.name, result="allowed").inc()
+
+			if not db_submission.is_notified:
+				age_in_hours = (datetime.utcnow() - db_submission.created).seconds / (60 * 60)
+				if age_in_hours < 2 and database.session.query(Comment).filter(Comment.submission == db_submission).count() > 50:
+					good_comments, bad_comments = get_comments_for_thread(subreddit, database, db_submission.submission_id)
+					log.warning(f"Non-moderated submission is {age_in_hours} hours with {len(good_comments)} good and {len(bad_comments)} bad comments: https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/")
+					db_submission.is_notified = True
 
 
 def check_flair_changes(subreddit, database):
