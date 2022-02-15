@@ -87,13 +87,14 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 		bot_comment.mod.distinguish(how="yes", sticky=True)
 
 		good_comments, bad_comments = get_comments_for_thread(subreddit, database, reddit_submission.id)
-		log.info(f"Reprocessing submission {reddit_submission.id} with {len(good_comments) + len(bad_comments)} comments")
-		for comment, author_result in bad_comments:
-			subreddit.reddit.comment(comment.comment_id).mod.remove()
-			comment.is_removed = True
-			log.info(f"Comment {comment.comment_id} by u/{comment.author.name} removed: {author_result}")
+		if len(bad_comments) + len(good_comments) > 0:
+			log.info(f"Reprocessing submission {reddit_submission.id} with {len(good_comments) + len(bad_comments)} comments")
+			for comment, author_result in bad_comments:
+				subreddit.reddit.comment(comment.comment_id).mod.remove()
+				comment.is_removed = True
+				log.info(f"Comment {comment.comment_id} by u/{comment.author.name} removed: {author_result}")
 
-		log.warning(f"Finished submission <https://www.reddit.com{reddit_submission.permalink}>, removed {bad_comments}/{len(good_comments) + len(bad_comments)} comments")
+			log.warning(f"Finished submission <https://www.reddit.com{reddit_submission.permalink}>, removed {len(bad_comments)}/{len(good_comments) + len(bad_comments)} comments")
 
 	return db_submission
 
@@ -135,7 +136,7 @@ def ingest_comments(subreddit, database):
 				age_in_hours = int((datetime.utcnow() - db_submission.created).total_seconds()) / (60 * 60)
 				if age_in_hours < 2 and database.session.query(Comment).filter(Comment.submission == db_submission).count() > 50:
 					good_comments, bad_comments = get_comments_for_thread(subreddit, database, db_submission.submission_id)
-					log.warning(f"Non-moderated submission is {age_in_hours} hours with {len(good_comments)} good and {len(bad_comments)} bad comments: <https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>")
+					log.warning(f"Non-moderated submission is {round(age_in_hours, 1)} hours with {len(good_comments)} good and {len(bad_comments)} bad comments: <https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>")
 					db_submission.is_notified = True
 
 
