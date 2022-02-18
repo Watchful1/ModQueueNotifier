@@ -1,5 +1,6 @@
 import discord_logging
 import prawcore.exceptions
+import requests
 from sqlalchemy.sql import func
 from datetime import datetime, timedelta
 
@@ -136,7 +137,9 @@ def ingest_comments(subreddit, database):
 				age_in_hours = int((datetime.utcnow() - db_submission.created).total_seconds()) / (60 * 60)
 				if age_in_hours < 2 and database.session.query(Comment).filter(Comment.submission == db_submission).count() > 50:
 					good_comments, bad_comments = get_comments_for_thread(subreddit, database, db_submission.submission_id)
-					log.warning(f"Non-moderated submission is {round(age_in_hours, 1)} hours with {len(good_comments)} good and {len(bad_comments)} bad comments: <https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>")
+					notify_string = f"Non-moderated submission is {round(age_in_hours, 1)} hours old with {len(good_comments)} comments from good accounts and {len(bad_comments)} comments from accounts with low history: <https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>"
+					log.info(notify_string)
+					requests.post(subreddit.webhook, data={"content": notify_string})
 					db_submission.is_notified = True
 
 

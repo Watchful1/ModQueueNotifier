@@ -99,7 +99,8 @@ if __name__ == "__main__":
 			'karma': 20
 		},
 		backup_reddit=instances['Watchful1'],
-		name_in_modmails=False
+		name_in_modmails=False,
+		webhook=discord_logging.get_config_var(praw_file, "CustomModBot", 'webhook_moderatoronly')
 	)
 
 	last_backup = None
