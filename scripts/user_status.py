@@ -12,7 +12,7 @@ from database import Comment, User, Submission
 
 database.init()
 
-username = "Talx_abt_politix"
+username = "Interesting-Gear-769"
 log.info(f"Looking up u/{username}")
 db_author = database.session.query(User).filter_by(name=username).first()
 if db_author is None:
@@ -22,24 +22,36 @@ if db_author is None:
 min_comment_date = datetime.utcnow() - timedelta(days=30)
 count_comments = database.session.query(Comment)\
 	.filter(Comment.author == db_author)\
-	.filter(Comment.is_removed == False)\
-	.filter(Comment.created < min_comment_date)\
 	.count()
-count_comments_total = database.session.query(Comment)\
-	.filter(Comment.author == db_author)\
-	.count()
-count_comments_removed = database.session.query(Comment)\
+log.info(f"Total: {count_comments}")
+count_comments = database.session.query(Comment)\
 	.filter(Comment.author == db_author)\
 	.filter(Comment.is_removed == True)\
 	.count()
-count_comments_deleted = database.session.query(Comment)\
+log.info(f"Removed: {count_comments}")
+count_comments = database.session.query(Comment)\
 	.filter(Comment.author == db_author)\
 	.filter(Comment.is_deleted == True)\
 	.count()
-log.info(f"Total: {count_comments_total}")
-log.info(f"Removed: {count_comments_removed}")
-log.info(f"Deleted: {count_comments_deleted}")
+log.info(f"Deleted: {count_comments}")
+count_comments = database.session.query(Comment)\
+	.filter(Comment.author == db_author)\
+	.filter(Comment.is_removed == False)\
+	.filter(Comment.created < min_comment_date)\
+	.count()
 log.info(f"Before threshold: {count_comments}")
+count_comments = database.session.query(Comment)\
+	.filter(Comment.author == db_author)\
+	.filter(Comment.is_removed == False)\
+	.filter(Comment.created < datetime.utcnow() - timedelta(days=30-7))\
+	.count()
+log.info(f"Before threshold, plus one week: {count_comments}")
+count_comments = database.session.query(Comment)\
+	.filter(Comment.author == db_author)\
+	.filter(Comment.is_removed == False)\
+	.filter(Comment.created < datetime.utcnow() - timedelta(days=30-7-7))\
+	.count()
+log.info(f"Before threshold, plus two weeks: {count_comments}")
 
 count_karma = database.session.query(func.sum(Comment.karma).label('karma'))\
 	.filter(Comment.author == db_author)\
