@@ -94,6 +94,7 @@ BAYAREA_KNOWN_LOG_TYPES = {
 	'editflair',
 	'submit_scheduled_post',
 	'unmuteuser',
+	'addremovalreason',
 }
 
 COMPOW_WARNING_LOG_TYPES = {
