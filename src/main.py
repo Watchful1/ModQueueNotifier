@@ -113,11 +113,11 @@ if __name__ == "__main__":
 				subreddit.clear_cache()
 				shared.ingest_log(subreddit, database)
 				shared.process_modqueue_comments(subreddit)
+				shared.process_modqueue_old(subreddit)
 
 			for subreddit in [comp_ow]:
 				shared.process_modqueue_reapprove(subreddit)
 				shared.process_modqueue_submissions(subreddit)
-				shared.process_modqueue_old(subreddit)
 				shared.log_highlighted_modmail(subreddit, start_time)
 				shared.log_archived_modmail_no_response(subreddit, start_time)
 
