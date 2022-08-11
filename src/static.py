@@ -102,6 +102,7 @@ COMPOW_WARNING_LOG_TYPES = {
 	'unbanuser': {"description": "!was temporary"},
 	'editflair': {"mod": "!OWMatchThreads", "target_title": "!"},
 	'wikirevise': {"mod": "!OWMatchThreads", "details": "!Page usernotes edited"},
+	'editsettings': {"mod": "!OWMatchThreads", "details": "!description"},
 }
 
 BAYAREA_WARNING_LOG_TYPES = {
