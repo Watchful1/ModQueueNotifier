@@ -191,6 +191,7 @@ def backfill_karma(subreddit, database):
 	comments = database.session.query(Comment)\
 		.filter(Comment.karma == None)\
 		.filter(Comment.created < max_comment_date)\
+		.filter(Comment.subreddit_id < subreddit.subreddit_id)\
 		.all()
 	fullnames = []
 	comment_map = {}
@@ -216,7 +217,7 @@ def backfill_karma(subreddit, database):
 
 			if len(comment_map) > 0:
 				counters.backfill_comments.labels(subreddit=subreddit.name, result="missing").inc(len(comment_map))
-				log.warning(f"{len(comment_map)} comments missing when backfilling karma. {(','.join(comment_map.keys()))}")
+				log.warning(f"{len(comment_map)} comments missing when backfilling karma for r/{subreddit.name}. {(','.join(comment_map.keys()))}")
 
 			comment_map = {}
 			fullnames = []
