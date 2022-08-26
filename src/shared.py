@@ -173,6 +173,8 @@ def check_flair_changes(subreddit, database):
 				)
 	else:
 		for log_item in subreddit.sub_object.mod.log(limit=20, action="editflair"):
+			if log_item.target_fullname is None:
+				continue
 			submission_id = log_item.target_fullname[3:]
 			if database.session.query(Submission).filter_by(submission_id=submission_id).filter_by(is_restricted=True).count() > 0:
 				break
