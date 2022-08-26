@@ -216,7 +216,7 @@ def backfill_karma(subreddit, database):
 
 			if len(comment_map) > 0:
 				counters.backfill_comments.labels(subreddit=subreddit.name, result="missing").inc(len(comment_map))
-				log.warning(f"{len(comment_map)} comments missing when backfilling karma")
+				log.warning(f"{len(comment_map)} comments missing when backfilling karma. {(','.join(comment_map.keys()))}")
 
 			comment_map = {}
 			fullnames = []
