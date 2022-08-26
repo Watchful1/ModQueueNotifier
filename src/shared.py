@@ -191,7 +191,7 @@ def backfill_karma(subreddit, database):
 	comments = database.session.query(Comment)\
 		.filter(Comment.karma == None)\
 		.filter(Comment.created < max_comment_date)\
-		.filter(Comment.subreddit_id < subreddit.sub_id)\
+		.filter(Comment.subreddit_id == subreddit.sub_id)\
 		.all()
 	fullnames = []
 	comment_map = {}
