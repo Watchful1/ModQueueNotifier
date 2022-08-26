@@ -3,11 +3,10 @@ import discord_logging
 
 log = discord_logging.init_logging()
 
-import database
-from database import LogItem
+from database import LogItem, Database
 
 reddit = praw.Reddit("Watchful1")
-database.init()
+database = Database()
 
 i = 0
 try:

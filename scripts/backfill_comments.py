@@ -4,22 +4,17 @@ import time
 import json
 import praw
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 log = discord_logging.init_logging()
 
-import database
-from database import Comment, User, Submission
+from database import Comment, User, Submission, Database
 
 
-database.init()
-reddit = praw.Reddit("Watchful1BotTest")
-url = "https://api.pushshift.io/reddit/comment/search?limit=1000&sort=desc&subreddit=bayarea&before="
-start_time = datetime.utcnow()
-
-# comment = database.session.query(Comment).order_by(Comment.created.asc()).first()
-# if comment is not None:
-# 	start_time = comment.created
+database = Database()
+url = "https://api.pushshift.io/reddit/comment/search?limit=1000&sort=desc&subreddit=Marriage&before="
+start_time = datetime.utcnow() #  datetime.strptime("21-11-19 15:34:07", '%y-%m-%d %H:%M:%S')
+end_time = datetime.strptime("22-08-20 01:43:35", '%y-%m-%d %H:%M:%S')  # start_time - timedelta(days=300)
 
 count = 0
 previous_epoch = int(start_time.replace(tzinfo=timezone.utc).timestamp()) - 1
@@ -45,6 +40,13 @@ while True:
 
 		submission_id = comment['link_id'][3:]
 		comment_created = datetime.utcfromtimestamp(comment['created_utc'])
+
+		if comment_created <= end_time:
+			log.info(f"{count} : {(comment_created.strftime('%Y-%m-%d'))}")
+			database.session.commit()
+			database.engine.dispose()
+			sys.exit()
+
 		db_submission = database.session.query(Submission).filter_by(submission_id=submission_id).first()
 		if db_submission is None:
 			db_submission = Submission(
@@ -58,18 +60,12 @@ while True:
 		if db_user is None:
 			db_user = database.session.merge(User(name=comment['author']))
 
-		if database.session.query(Comment).filter_by(comment_id=comment['id']).first() is not None:
-			log.info(f"{count} : {(comment_created.strftime('%Y-%m-%d'))}")
-			log.info(f"Found existing comment, exiting")
-			database.session.commit()
-			database.engine.dispose()
-			sys.exit()
-
 		db_comment = database.session.merge(Comment(
 			comment_id=comment['id'],
 			author=db_user,
 			submission=db_submission,
-			created=comment_created
+			created=comment_created,
+			subreddit_id=3
 		))
 
 		if count % 1000 == 0:

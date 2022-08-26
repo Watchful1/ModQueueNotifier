@@ -12,8 +12,9 @@ class Subreddit:
 	def __init__(
 			self,
 			name,
+			sub_id,
 			reddit,
-			moderators,
+			moderators=None,
 			known_log_types=None,
 			warning_log_types=None,
 			report_reasons=None,
@@ -26,10 +27,11 @@ class Subreddit:
 			name_in_modmails=True
 	):
 		self.name = name
+		self.sub_id = sub_id
 		self.reddit = reddit
 		self.backup_reddit = backup_reddit
-		self.moderators = moderators
 
+		self.moderators = moderators
 		self.known_log_types = known_log_types
 		self.warning_log_types = warning_log_types
 		self.report_reasons = report_reasons

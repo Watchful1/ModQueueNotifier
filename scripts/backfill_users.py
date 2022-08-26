@@ -5,11 +5,10 @@ from datetime import datetime
 
 log = discord_logging.init_logging()
 
-import database
-from database import Comment, User, Submission
+from database import Comment, User, Submission, Database
 
 
-database.init()
+database = Database()
 reddit = praw.Reddit("Watchful1")
 
 users = database.session.query(User).filter_by(created=None).all()

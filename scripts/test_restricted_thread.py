@@ -4,8 +4,7 @@ from datetime import datetime, timedelta
 
 log = discord_logging.init_logging()
 
-import database
-from database import Comment, User, Submission
+from database import Comment, User, Submission, Database
 
 
 def author_restricted(subreddit, database, db_author):
@@ -28,7 +27,7 @@ def author_restricted(subreddit, database, db_author):
 	return None
 
 
-database.init()
+database = Database()
 reddit_submission_id = "p7k8bv"
 bay_area = {
 	'flairs': {"Politics"},

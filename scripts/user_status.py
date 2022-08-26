@@ -3,16 +3,14 @@ from sqlalchemy.sql import func
 import sys
 from datetime import datetime, timedelta
 
-import database
-
 log = discord_logging.init_logging()
 
-from database import Comment, User, Submission
+from database import Comment, User, Submission, Database
 
 
-database.init()
+database = Database()
 
-username = "Interesting-Gear-769"
+username = "HowManyBigFluffyHats"
 log.info(f"Looking up u/{username}")
 db_author = database.session.query(User).filter_by(name=username).first()
 if db_author is None:

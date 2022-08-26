@@ -13,7 +13,6 @@ from datetime import datetime, timedelta
 
 log = discord_logging.init_logging()
 
-import database
 import counters
 import static
 import utils
@@ -21,7 +20,9 @@ import shared
 import bayarea
 import compow
 from classes import Subreddit
+from database import Database
 
+database = None
 start_time = datetime.utcnow()
 
 
@@ -47,7 +48,7 @@ if __name__ == "__main__":
 
 	praw_file = discord_logging.get_config()
 	discord_logging.init_discord_logging("QueueBot", logging.WARNING, 1, logging_webhook=discord_logging.get_config_var(praw_file, "global", 'queue_webhook'))
-	database.init()
+	database = Database()
 
 	instances = {}
 	for username in ['OWMatchThreads', 'CustomModBot', 'Watchful1']:
@@ -64,6 +65,7 @@ if __name__ == "__main__":
 
 	comp_ow = Subreddit(
 		"CompetitiveOverwatch",
+		1,
 		instances['OWMatchThreads'],
 		static.COMPOW_MODERATORS,
 		known_log_types=static.COMPOW_KNOWN_LOG_TYPES,
@@ -82,6 +84,7 @@ if __name__ == "__main__":
 	)
 	bay_area = Subreddit(
 		"bayarea",
+		2,
 		instances['CustomModBot'],
 		static.BAYAREA_MODERATORS,
 		known_log_types=static.BAYAREA_KNOWN_LOG_TYPES,
@@ -96,11 +99,25 @@ if __name__ == "__main__":
 			'flairs': {"Politics", "COVID19", "Local Crime"},
 			'comment_days': 30,
 			'comments': 20,
-			'karma': 20
+			'karma': 20,
+			'action': "remove"
 		},
 		backup_reddit=instances['Watchful1'],
 		name_in_modmails=False,
 		webhook=discord_logging.get_config_var(praw_file, "CustomModBot", 'webhook_moderatoronly')
+	)
+	marriage = Subreddit(
+		"Marriage",
+		3,
+		instances['CustomModBot'],
+		restricted={
+			'flairs': {"Sensitive"},
+			'comment_days': 30,
+			'comments': 20,
+			'karma': 20,
+			'action': "report"
+		},
+		name_in_modmails=False
 	)
 
 	last_backup = None
@@ -109,8 +126,10 @@ if __name__ == "__main__":
 		try:
 			log.debug("Starting run")
 
-			for subreddit in [comp_ow, bay_area]:
+			for subreddit in [comp_ow, bay_area, marriage]:
 				subreddit.clear_cache()
+
+			for subreddit in [comp_ow, bay_area]:
 				shared.ingest_log(subreddit, database)
 				shared.process_modqueue_comments(subreddit)
 				shared.process_modqueue_old(subreddit)
@@ -124,10 +143,10 @@ if __name__ == "__main__":
 				compow.process_submissions(subreddit)
 				compow.parse_modmail(subreddit)
 
-			for subreddit in [bay_area]:
-				bayarea.ingest_comments(subreddit, database)
-				bayarea.check_flair_changes(subreddit, database)
-				bayarea.backfill_karma(subreddit, database)
+			for subreddit in [bay_area, marriage]:
+				shared.ingest_comments(subreddit, database)
+				shared.check_flair_changes(subreddit, database)
+				shared.backfill_karma(subreddit, database)
 
 			for subreddit in [comp_ow, bay_area]:
 				shared.count_queues(subreddit)

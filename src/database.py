@@ -7,10 +7,6 @@ from shutil import copyfile
 
 
 Base = declarative_base()
-engine = None
-session = None
-backup_folder = "backup"
-database_name = "database.db"
 
 
 class LogItem(Base):
@@ -98,6 +94,8 @@ class Comment(Base):
 	karma = Column(Integer)
 	is_removed = Column(Boolean, nullable=False)
 	is_deleted = Column(Boolean, nullable=False)
+	is_author_restricted = Column(Boolean, nullable=False)
+	subreddit_id = Column(Integer, nullable=False)
 
 	author = relationship("User", lazy="joined")
 	submission = relationship("Submission", lazy="joined")
@@ -107,44 +105,56 @@ class Comment(Base):
 		comment_id,
 		author,
 		submission,
-		created
+		created,
+		subreddit_id,
+		karma=None,
+		is_removed=False,
+		is_deleted=False,
+		is_author_restricted=False
 	):
 		self.comment_id = comment_id
 		self.author = author
 		self.submission = submission
 		self.created = created
-		self.karma = None
-		self.is_removed = False
-		self.is_deleted = False
+		self.subreddit_id = subreddit_id
+		self.karma = karma
+		self.is_removed = is_removed
+		self.is_deleted = is_deleted
+		self.is_author_restricted = is_author_restricted
 
 	def __str__(self):
 		return self.comment_id
 
 
-def init():
-	global engine
-	global session
-	engine = create_engine(f'sqlite:///{database_name}')
-	session_maker = sessionmaker(bind=engine)
-	session = session_maker()
-	Base.metadata.create_all(engine)
-	session.commit()
+class Database:
+	def __init__(self, location="database.db"):
+		self.engine = None
+		self.session = None
+		self.location = location
+		self.init(self.location)
 
+	def init(self, location):
+		self.engine = create_engine(f'sqlite:///{location}')
+		session_maker = sessionmaker(bind=self.engine)
+		self.session = session_maker()
+		Base.metadata.create_all(self.engine)
+		self.session.commit()
 
-def backup():
-	global engine
-	global session
-	session.commit()
-	engine.dispose()
+	def close(self):
+		self.session.commit()
+		self.engine.dispose()
 
-	if not os.path.exists(backup_folder):
-		os.makedirs(backup_folder)
+	def backup(self, backup_folder="backup"):
+		self.close()
 
-	copyfile(
-		database_name,
-		backup_folder + "/" +
-			datetime.utcnow().strftime("%Y-%m-%d_%H-%M") +
-			".db"
-	)
+		if not os.path.exists(backup_folder):
+			os.makedirs(backup_folder)
 
-	init()
+		copyfile(
+			self.location,
+			backup_folder + "/" +
+				datetime.utcnow().strftime("%Y-%m-%d_%H-%M") +
+				".db"
+		)
+
+		self.init(self.location)
