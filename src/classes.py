@@ -54,6 +54,7 @@ class Subreddit:
 		self.reported_count = 0
 		self.oldest_modmail_hours = None
 		self.oldest_unmod_hours = None
+		self.oldest_unmod_link = None
 
 		self._modqueue = None
 		self._all_modmail = None
@@ -99,7 +100,7 @@ class Subreddit:
 		results = []
 		ping_here = False
 		ping_here = self.check_threshold(results, self.unmod_count, 'unmod', "Unmod") or ping_here
-		ping_here = self.check_threshold(results, self.oldest_unmod_hours, 'unmod_hours', "Oldest unmod in hours") or ping_here
+		ping_here = self.check_threshold(results, self.oldest_unmod_hours, 'unmod_hours', f"[Oldest unmod](<{self.oldest_unmod_link}>) in hours") or ping_here
 		ping_here = self.check_threshold(results, self.reported_count, 'modqueue', "Modqueue") or ping_here
 		ping_here = self.check_threshold(results, self.mail_count, 'modmail', "Modmail") or ping_here
 		ping_here = self.check_threshold(results, self.oldest_modmail_hours, 'modmail_hours', "Oldest modmail in hours") or ping_here
@@ -145,6 +146,7 @@ class Subreddit:
 		self.reported_count = 0
 		self.oldest_modmail_hours = None
 		self.oldest_unmod_hours = None
+		self.oldest_unmod_link = None
 
 	def flair_restricted(self, flair):
 		if self.restricted['flairs'] is None:
