@@ -62,6 +62,9 @@ class Subreddit:
 		self._appeal_modmail = None
 		self.mod_log = []
 
+		self.sub_object._fetch()
+		self.case_sensitive_name = self.sub_object.display_name
+
 		self.ban_tiers = [
 			0,
 			3,
