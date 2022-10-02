@@ -479,7 +479,7 @@ def count_queues(subreddit):
 		for submission in subreddit.sub_object.mod.unmoderated():
 			subreddit.unmod_count += 1
 			oldest_unmod = datetime.utcfromtimestamp(submission.created_utc)
-			subreddit.oldest_unmod_link = submission.url
+			subreddit.oldest_unmod_link = f"https://www.reddit.com{submission.permalink}"
 
 		subreddit.oldest_unmod_hours = math.trunc((datetime.utcnow() - oldest_unmod).seconds / (60 * 60))
 
