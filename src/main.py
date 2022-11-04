@@ -133,6 +133,7 @@ if __name__ == "__main__":
 				shared.ingest_log(subreddit, database)
 				shared.process_modqueue_comments(subreddit)
 				shared.process_modqueue_old(subreddit)
+				shared.post_overlapping_actions(subreddit, database)
 
 			for subreddit in [comp_ow]:
 				shared.process_modqueue_reapprove(subreddit)

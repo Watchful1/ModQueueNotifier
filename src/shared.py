@@ -1,10 +1,11 @@
 import discord_logging
 import math
 import requests
+import traceback
 import prawcore.exceptions
 from collections import defaultdict
 from datetime import datetime, timedelta
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, text
 
 log = discord_logging.get_logger()
 
@@ -23,7 +24,8 @@ def get_comments_for_thread(subreddit, database, thread_id):
 
 	author_dict = {}
 	good_comments = []
-	bad_comments = []
+	bad_comments_dict = {}
+	fullnames = []
 	for comment in comments:
 		if comment.author.name in author_dict:
 			author_result = author_dict[comment.author.name]
@@ -34,7 +36,19 @@ def get_comments_for_thread(subreddit, database, thread_id):
 		if author_result is None or comment.author.name == "CustomModBot":
 			good_comments.append((comment, "good"))
 		else:
-			bad_comments.append((comment, author_result))
+			bad_comments_dict[comment.id] = (comment, author_result)
+			fullnames.append(f"t1_{comment.comment_id}")
+
+	bad_comments = []
+	try:
+		for comment in subreddit.reddit.info(fullnames):
+			if comment.score < 10:
+				bad_comments.append(bad_comments[comment.id])
+			else:
+				good_comments.append(bad_comments[comment.id])
+	except Exception as err:
+		utils.process_error(f"Error loading comment scores when reprocessing thread", err, traceback.format_exc())
+
 	return good_comments, bad_comments
 
 
@@ -533,3 +547,33 @@ def ping_queues(subreddit, database):
 				log.info("Couldn't figure out who cleared the queue")
 
 			subreddit.has_posted = False
+
+
+def post_overlapping_actions(subreddit, database):
+	result = database.session.execute(text('''
+select l1.mod, l1.action, l2.mod, l2.action, l1.target_fullname, l1.target_permalink
+from log l1
+	left join log l2
+		on l1.target_fullname = l2.target_fullname
+			and l1.id != l2.id
+			and l1.action != l2.action
+			and l1.mod != l2.mod
+			and l1.created < l2.created
+where l1.action in ('approvecomment','approvelink','removecomment','removelink')
+	and l2.action in ('approvecomment','approvelink','removecomment','removelink')
+	and l1.mod not in ('OWMatchThreads','AutoModerator','CustomModBot')
+	and l2.mod not in ('OWMatchThreads','AutoModerator','CustomModBot')
+	and ROUND((JULIANDAY(l2.created) - JULIANDAY(l1.created)) * 86400) < 3600
+	and ROUND((JULIANDAY(current_timestamp) - JULIANDAY(l2.created)) * 86400) < 60 * 60 * 2
+order by l1.created desc
+limit 100'''))
+	for mod1, action1, mod2, action2, fullname, permalink in result:
+		if not subreddit.recent_overlaps.contains(fullname):
+			action_name1 = "approved" if 'approve' in action1 else "removed"
+			action_name2 = "approved" if 'approve' in action2 else "removed"
+			item_type = "post" if 't3_' in fullname else "comment"
+
+			subreddit.recent_overlaps.put(fullname)
+			blame_string = f"{subreddit.get_discord_name(mod1)} {action_name1} and then {subreddit.get_discord_name(mod2)} {action_name2} [this {item_type}](<https://www.reddit.com{permalink}>). Make sure the second action is correct"
+			log.info(f"Posting: {blame_string}")
+			requests.post(subreddit.webhook, data={"content": blame_string})

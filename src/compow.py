@@ -33,11 +33,7 @@ def process_submissions(subreddit):
 				submission.mod.lock()
 
 		if submission.approved and submission.link_flair_text is None and not subreddit.posts_notified.contains(submission.id):
-			if submission.approved_by in subreddit.moderators:
-				user = f"<@{subreddit.moderators[submission.approved_by]}>"
-			else:
-				user = f"u/{submission.approved_by}"
-			blame_string = f"{user} approved without adding a flair: <https://www.reddit.com{submission.permalink}>"
+			blame_string = f"{subreddit.get_discord_name(submission.approved_by)} approved without adding a flair: <https://www.reddit.com{submission.permalink}>"
 			log.info(f"Posting: {blame_string}")
 			subreddit.posts_notified.put(submission.id)
 			requests.post(subreddit.webhook, data={"content": blame_string})

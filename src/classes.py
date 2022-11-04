@@ -61,6 +61,7 @@ class Subreddit:
 		self._archived_modmail = None
 		self._appeal_modmail = None
 		self.mod_log = []
+		self.recent_overlaps = Queue(50)
 
 		self.sub_object._fetch()
 		self.case_sensitive_name = self.sub_object.display_name
@@ -155,6 +156,12 @@ class Subreddit:
 		if self.restricted['flairs'] is None:
 			return False
 		return flair in self.restricted['flairs']
+
+	def get_discord_name(self, name):
+		if name in self.moderators:
+			user = f"<@{self.moderators[name]}>"
+		else:
+			user = f"u/{name}"
 
 
 class SubredditNotes:
