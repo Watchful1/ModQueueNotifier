@@ -550,7 +550,7 @@ def ping_queues(subreddit, database):
 
 
 def post_overlapping_actions(subreddit, database):
-	result = database.session.execute(text('''
+	result = database.session.execute(text(f'''
 select l1.mod, l1.action, l2.mod, l2.action, l1.target_fullname, l1.target_permalink
 from log l1
 	left join log l2
@@ -559,7 +559,8 @@ from log l1
 			and l1.action != l2.action
 			and l1.mod != l2.mod
 			and l1.created < l2.created
-where l1.action in ('approvecomment','approvelink','removecomment','removelink')
+where l1.subreddit = '{subreddit.case_sensitive_name}'
+	and l1.action in ('approvecomment','approvelink','removecomment','removelink')
 	and l2.action in ('approvecomment','approvelink','removecomment','removelink')
 	and l1.mod not in ('OWMatchThreads','AutoModerator','CustomModBot')
 	and l2.mod not in ('OWMatchThreads','AutoModerator','CustomModBot')
