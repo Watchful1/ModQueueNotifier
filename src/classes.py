@@ -159,9 +159,9 @@ class Subreddit:
 
 	def get_discord_name(self, name):
 		if name in self.moderators:
-			user = f"<@{self.moderators[name]}>"
+			return f"<@{self.moderators[name]}>"
 		else:
-			user = f"u/{name}"
+			return f"u/{name}"
 
 
 class SubredditNotes:

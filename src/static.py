@@ -25,14 +25,14 @@ COMPOW_MODERATORS = {
 
 BAYAREA_MODERATORS = {
 	#"dihydrogen_monoxide",
-	"TrucyWright",
-	"Watchful1",
-	"-dantastic-",
-	"which_objective",
-	"MsNewKicks",
-	"AutoModerator",
-	"CustomModBot",
-	"BotDefense",
+	"TrucyWright": "TrucyWright",
+	"Watchful1": "Watchful1",
+	"-dantastic-": "-dantastic-",
+	"which_objective": "which_objective",
+	"MsNewKicks": "MsNewKicks",
+	"AutoModerator": "AutoModerator",
+	"CustomModBot": "CustomModBot",
+	"BotDefense": "BotDefense",
 }
 
 COMPOW_KNOWN_LOG_TYPES = {
