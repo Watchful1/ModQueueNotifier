@@ -24,12 +24,12 @@ COMPOW_MODERATORS = {
 }
 
 BAYAREA_MODERATORS = {
-	#"dihydrogen_monoxide",
-	"TrucyWright": "TrucyWright",
-	"Watchful1": "Watchful1",
-	"-dantastic-": "-dantastic-",
-	"which_objective": "which_objective",
-	"MsNewKicks": "MsNewKicks",
+	#"dihydrogen_monoxide": "74601397701578752",
+	"TrucyWright": "145398757582700544",
+	"Watchful1": "95296130761371648",
+	"-dantastic-": "543108284849324034",
+	"which_objective": "714692771687956511",
+	"MsNewKicks": "811705167673688086",
 	"AutoModerator": "AutoModerator",
 	"CustomModBot": "CustomModBot",
 	"BotDefense": "BotDefense",

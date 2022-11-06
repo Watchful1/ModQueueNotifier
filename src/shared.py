@@ -43,9 +43,9 @@ def get_comments_for_thread(subreddit, database, thread_id):
 	try:
 		for comment in subreddit.reddit.info(fullnames):
 			if comment.score < 10:
-				bad_comments.append(bad_comments[comment.id])
+				bad_comments.append(bad_comments_dict[comment.id])
 			else:
-				good_comments.append(bad_comments[comment.id])
+				good_comments.append(bad_comments_dict[comment.id])
 	except Exception as err:
 		utils.process_error(f"Error loading comment scores when reprocessing thread", err, traceback.format_exc())
 
