@@ -36,7 +36,7 @@ def get_comments_for_thread(subreddit, database, thread_id):
 		if author_result is None or comment.author.name == "CustomModBot":
 			good_comments.append((comment, "good"))
 		else:
-			bad_comments_dict[comment.id] = (comment, author_result)
+			bad_comments_dict[comment.comment_id] = (comment, author_result)
 			fullnames.append(f"t1_{comment.comment_id}")
 
 	bad_comments = []
