@@ -10,8 +10,8 @@ from database import Comment, User, Submission, Database
 
 database = Database()
 
-username = "TedMittelstaedt"
-subreddit_id = 3
+username = "dobbysreward"
+subreddit_id = 2
 log.info(f"Looking up u/{username}")
 db_author = database.session.query(User).filter_by(name=username).first()
 if db_author is None:
