@@ -121,7 +121,7 @@ COMPOW_REPORT_REASONS = {
 
 >If you see any doxing or feel that you are the target of harassment, please [message the mod team](https://www.reddit.com/message/compose?to=%2Fr%2FCompetitiveoverwatch) immediately!"""
 		},
-	"#2 No Off-Topic or Low-Value Content":
+	"#2 No Low-Value Content":
 		{"rule": "2", "reason": """>Your post is in violation of Rule #2 and is considered low value. A list of examples of high vs low value content [can be found here](https://www.reddit.com/r/Competitiveoverwatch/wiki/rules#wiki_rule_.232_no_off-topic_or_low-value_content)."""
 		},
 	"#3 No Spoilers in titles for 24 Hours":
@@ -193,7 +193,7 @@ The exception is made for video memes (for example, Overwatch related text and i
 	"#9 No duplicate posts":
 		{"rule": "9", "reason": """>Someone else has posted about this topic recently. Occasionally we may pick an alternative thread if it has more discussion, even if it's not the first thread on a subject."""
 		},
-	"offtopic":
+	"#10 No Off-Topic Content":
 		{"rule": "10", "reason": """>This post doesn't relate to Competitive Overwatch or Overwatch esports."""
 		},
 }
