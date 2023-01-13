@@ -72,7 +72,7 @@ if __name__ == "__main__":
 		warning_log_types=static.COMPOW_WARNING_LOG_TYPES,
 		report_reasons=static.COMPOW_REPORT_REASONS,
 		comment_report_reasons=static.COMPOW_COMMENT_REPORT_REASONS,
-		reapprove_reasons=['#2 No Off-Topic or Low-Value Content', 'This is spam'],
+		reapprove_reasons=['#2 No Low-Value Content', 'This is spam'],
 		thresholds={
 			'unmod': {'track': True, 'post': 15, 'ping': 20},
 			'unmod_hours': {'post': 4, 'ping': 6},

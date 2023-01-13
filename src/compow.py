@@ -19,7 +19,7 @@ def process_submissions(subreddit):
 				submission.mod.approve()
 				wiki_page = subreddit.sub_object.wiki['config/sidebar']
 				edited_sidebar = re.sub(
-					r'(\[Short Questions Megathread\]\(https://redd.it/)(\w{4,8})',
+					r'(\[Short Questions Megathread\]\(https://redd.it/)(\w{4,10})',
 					f"\\1{submission.id}",
 					wiki_page.content_md
 				)
