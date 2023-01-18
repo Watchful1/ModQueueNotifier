@@ -20,7 +20,7 @@ def process_submissions(subreddit):
 				wiki_page = subreddit.sub_object.wiki['config/sidebar']
 				edited_sidebar = re.sub(
 					r'(\[Short Questions Megathread\]\(https://redd.it/)(\w{4,10})',
-					f"\\1{submission.id}",
+					f"\\1\\\\{submission.id}",
 					wiki_page.content_md
 				)
 				wiki_page.edit(edited_sidebar)
