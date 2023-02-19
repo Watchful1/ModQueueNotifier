@@ -44,12 +44,13 @@ def conversation_not_processed(conversation, processed_modmails, start_time):
 
 
 def recursive_remove_comments(comment, count_removed=1):
+	log.debug(f"Recursive removing {comment.id}")
 	comment.refresh()
 	for child_comment in comment.replies:
 		count_removed = recursive_remove_comments(child_comment, count_removed)
-		child_comment.mod.remove()
+	if not comment.removed:
+		comment.mod.remove()
 		count_removed += 1
-	comment.mod.remove()
 	return count_removed
 
 
