@@ -24,7 +24,8 @@ class Subreddit:
 			webhook=None,
 			restricted=None,
 			backup_reddit=None,
-			name_in_modmails=True
+			name_in_modmails=True,
+			filtered_users=None
 	):
 		self.name = name
 		self.sub_id = sub_id
@@ -41,6 +42,10 @@ class Subreddit:
 		self.webhook = webhook
 		self.restricted = restricted
 		self.name_in_modmails = name_in_modmails
+		if filtered_users:
+			self.filtered_users = filtered_users
+		else:
+			self.filtered_users = []
 
 		self.sub_object = reddit.subreddit(self.name)
 		self.post_checked = datetime.utcnow()
