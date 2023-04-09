@@ -105,7 +105,7 @@ if __name__ == "__main__":
 		backup_reddit=instances['Watchful1'],
 		name_in_modmails=False,
 		webhook=discord_logging.get_config_var(praw_file, "CustomModBot", 'webhook_moderatoronly'),
-		filtered_users=["Aum888"]
+		#filtered_users=["Aum888"]
 	)
 	marriage = Subreddit(
 		"Marriage",
@@ -145,8 +145,8 @@ if __name__ == "__main__":
 				compow.process_submissions(subreddit)
 				compow.parse_modmail(subreddit)
 
-			for subreddit in [bay_area]:
-				bayarea.filter_recent_posts(subreddit)
+			# for subreddit in [bay_area]:
+			# 	bayarea.filter_recent_posts(subreddit)
 
 			for subreddit in [bay_area, marriage]:
 				shared.ingest_comments(subreddit, database)

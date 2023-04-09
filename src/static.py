@@ -30,6 +30,7 @@ BAYAREA_MODERATORS = {
 	"-dantastic-": "543108284849324034",
 	"which_objective": "714692771687956511",
 	"MsNewKicks": "811705167673688086",
+	"DuckyFreeman": "318215764303675392",
 	"AutoModerator": "AutoModerator",
 	"CustomModBot": "CustomModBot",
 	"BotDefense": "BotDefense",
