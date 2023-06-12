@@ -462,6 +462,7 @@ def log_highlighted_modmail(subreddit, start_time):
 def ignore_modmail_requests(subreddit):
 	for conversation in subreddit.all_modmail():
 		if len(conversation.messages) <= 1:
+			log.info(f"Auto-archiving modmail from {conversation.authors[0].name}")
 			conversation.reply(
 				author_hidden=True,
 				body=f'''This is an automated reply. If you are not asking to join the subreddit, please reply again to this message and we will look at it shortly.
