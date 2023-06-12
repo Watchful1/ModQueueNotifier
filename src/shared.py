@@ -459,6 +459,21 @@ def log_highlighted_modmail(subreddit, start_time):
 				subreddit.processed_modmails[conversation.id] = utils.parse_modmail_datetime(conversation.last_updated)
 
 
+def ignore_modmail_requests(subreddit):
+	for conversation in subreddit.all_modmail():
+		if len(conversation.messages) <= 1:
+			conversation.reply(
+				author_hidden=True,
+				body=f'''This is an automated reply. If you are not asking to join the subreddit, please reply again to this message and we will look at it shortly.
+
+We have closed the subreddit due to the upcoming API changes that will kill off 3rd party apps and negatively impact users and mods alike. Read the following for more info and join us on our discord while the subreddit is disabled:
+
+{subreddit.discord_link}  
+https://www.reddit.com/r/Save3rdPartyApps/comments/13yh0jf/dont_let_reddit_kill_3rd_party_apps/'''
+			)
+			conversation.archive()
+
+
 def log_archived_modmail_no_response(subreddit, start_time):
 	for conversation in subreddit.archived_modmail():
 		if conversation.last_user_update is not None and \

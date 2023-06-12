@@ -25,7 +25,8 @@ class Subreddit:
 			restricted=None,
 			backup_reddit=None,
 			name_in_modmails=True,
-			filtered_users=None
+			filtered_users=None,
+			discord_link=None
 	):
 		self.name = name
 		self.sub_id = sub_id
@@ -46,6 +47,7 @@ class Subreddit:
 			self.filtered_users = filtered_users
 		else:
 			self.filtered_users = []
+		self.discord_link = discord_link
 
 		self.sub_object = reddit.subreddit(self.name)
 		self.post_checked = datetime.utcnow()

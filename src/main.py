@@ -80,7 +80,8 @@ if __name__ == "__main__":
 			'modmail': {'track': True, 'post': 5, 'ping': 8},
 			'modmail_hours': {'post': 12, 'ping': 24},
 		},
-		webhook=discord_logging.get_config_var(praw_file, "OWMatchThreads", 'webhook_redditmodtalk')
+		webhook=discord_logging.get_config_var(praw_file, "OWMatchThreads", 'webhook_redditmodtalk'),
+		discord_link="https://discord.gg/competitiveow"
 	)
 	bay_area = Subreddit(
 		"bayarea",
@@ -105,7 +106,8 @@ if __name__ == "__main__":
 		backup_reddit=instances['Watchful1'],
 		name_in_modmails=False,
 		webhook=discord_logging.get_config_var(praw_file, "CustomModBot", 'webhook_moderatoronly'),
-		#filtered_users=["Aum888"]
+		#filtered_users=["Aum888"],
+		discord_link="https://discord.gg/35z3AA9xp3"
 	)
 	marriage = Subreddit(
 		"Marriage",
@@ -155,6 +157,7 @@ if __name__ == "__main__":
 
 			for subreddit in [comp_ow, bay_area]:
 				shared.count_queues(subreddit)
+				shared.ignore_modmail_requests(subreddit)
 
 			for subreddit in [comp_ow]:
 				shared.ping_queues(subreddit, database)
