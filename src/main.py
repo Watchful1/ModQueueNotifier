@@ -147,8 +147,8 @@ if __name__ == "__main__":
 				compow.process_submissions(subreddit)
 				compow.parse_modmail(subreddit)
 
-			for subreddit in [bay_area]:
-				shared.ignore_modmail_requests(subreddit)
+			# for subreddit in [bay_area]:
+			# 	shared.ignore_modmail_requests(subreddit)
 
 			for subreddit in [bay_area, marriage]:
 				shared.ingest_comments(subreddit, database)
