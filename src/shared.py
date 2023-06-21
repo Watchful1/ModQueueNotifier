@@ -495,7 +495,7 @@ def count_queues(subreddit):
 		for conversation in subreddit.combined_modmail():
 			if not conversation.is_highlighted:
 				subreddit.mail_count += 1
-				modmail_age = datetime.strptime(conversation.last_updated, "%Y-%m-%dT%H:%M:%S.%f+00:00")
+				modmail_age = utils.parse_modmail_datetime(conversation.last_updated)
 				if modmail_age < oldest_modmail:
 					oldest_modmail = modmail_age
 
