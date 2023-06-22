@@ -313,7 +313,7 @@ def process_modqueue_old(subreddit):
 	for item in list(subreddit.modqueue()):
 		item_date = datetime.utcfromtimestamp(item.created_utc)
 		if item_date < datetime.utcnow() - timedelta(days=180):
-			log.warning(f"r/{subreddit.name}: [Old item in modqueue](https://www.reddit.com/{item.permalink}), automatically removing")
+			log.info(f"r/{subreddit.name}: [Old item in modqueue](https://www.reddit.com/{item.permalink}), automatically removing")
 			item.mod.remove()
 
 
