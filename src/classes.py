@@ -129,7 +129,7 @@ class Subreddit:
 
 	def all_modmail(self):
 		if self._all_modmail is None:
-			self._all_modmail = list(self.sub_object.modmail.conversations(state='all'))
+			self._all_modmail = [mail for mail in self.sub_object.modmail.conversations(state='all') if not mail.is_internal]
 		return self._all_modmail
 
 	def archived_modmail(self):
