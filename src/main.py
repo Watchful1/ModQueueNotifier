@@ -106,21 +106,7 @@ if __name__ == "__main__":
 		backup_reddit=instances['Watchful1'],
 		name_in_modmails=False,
 		webhook=discord_logging.get_config_var(praw_file, "CustomModBot", 'webhook_moderatoronly'),
-		#filtered_users=["Aum888"],
 		discord_link="https://discord.gg/35z3AA9xp3"
-	)
-	marriage = Subreddit(
-		"Marriage",
-		3,
-		instances['CustomModBot'],
-		restricted={
-			'flairs': {"Sensitive"},
-			'comment_days': 30,
-			'comments': 20,
-			'karma': 20,
-			'action': "report"
-		},
-		name_in_modmails=False
 	)
 
 	last_backup = None
@@ -129,7 +115,7 @@ if __name__ == "__main__":
 		try:
 			log.debug("Starting run")
 
-			for subreddit in [comp_ow, bay_area, marriage]:
+			for subreddit in [comp_ow, bay_area]:
 				subreddit.clear_cache()
 
 			for subreddit in [comp_ow, bay_area]:
@@ -147,10 +133,7 @@ if __name__ == "__main__":
 				compow.process_submissions(subreddit)
 				compow.parse_modmail(subreddit)
 
-			# for subreddit in [bay_area]:
-			# 	shared.ignore_modmail_requests(subreddit)
-
-			for subreddit in [bay_area, marriage]:
+			for subreddit in [bay_area]:
 				shared.ingest_comments(subreddit, database)
 				shared.check_flair_changes(subreddit, database)
 				shared.backfill_karma(subreddit, database)

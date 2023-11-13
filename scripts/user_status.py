@@ -10,7 +10,7 @@ from database import Comment, User, Submission, Database
 
 database = Database()
 
-username = "dobbysreward"
+username = "USDeptofLabor"
 subreddit_id = 2
 log.info(f"Looking up u/{username}")
 db_author = database.session.query(User).filter_by(name=username).first()
