@@ -75,9 +75,11 @@ class Submission(Base):
 		self,
 		submission_id,
 		created,
-		is_restricted
+		is_restricted,
+		author
 	):
 		self.submission_id = submission_id
+		self.author = author
 		self.created = created
 		self.is_restricted = is_restricted
 		self.is_notified = False
