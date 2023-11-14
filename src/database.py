@@ -67,6 +67,9 @@ class Submission(Base):
 	is_restricted = Column(Boolean, nullable=False)
 	created = Column(DateTime, nullable=False)
 	is_notified = Column(Boolean, nullable=False, default=False)
+	author_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+
+	author = relationship("User", lazy="joined")
 
 	def __init__(
 		self,

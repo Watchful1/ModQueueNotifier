@@ -30,7 +30,7 @@ def get_comments_for_thread(subreddit, database, thread_id):
 		if comment.author.name in author_dict:
 			author_result = author_dict[comment.author.name]
 		else:
-			author_result = author_restricted(subreddit, database, comment.author)
+			author_result = author_comment_restricted(subreddit, database, comment.author)
 			author_dict[comment.author.name] = author_result
 
 		if author_result is None or comment.author.name == "CustomModBot":
@@ -52,7 +52,7 @@ def get_comments_for_thread(subreddit, database, thread_id):
 	return good_comments, bad_comments
 
 
-def author_restricted(subreddit, database, db_author):
+def author_comment_restricted(subreddit, database, db_author):
 	min_comment_date = datetime.utcnow() - timedelta(days=subreddit.restricted['comment_days'])
 	count_comments = database.session.query(Comment)\
 		.filter(Comment.subreddit_id == subreddit.sub_id)\
@@ -91,10 +91,16 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 	flair_restricted = subreddit.flair_restricted(reddit_submission.link_flair_text)
 	reprocess_submission = False
 	if db_submission is None:
+		db_user = database.session.query(User).filter_by(name=reddit_submission.author.name).first()
+		if db_user is None:
+			db_user = User(name=reddit_submission.author.name)
+			database.session.add(db_user)
+
 		db_submission = Submission(
 			submission_id=reddit_submission.id,
 			created=datetime.utcfromtimestamp(reddit_submission.created_utc),
-			is_restricted=flair_restricted
+			is_restricted=flair_restricted,
+			author=db_user
 		)
 		database.session.add(db_submission)
 		reprocess_submission = flair_restricted
@@ -132,6 +138,13 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 	return db_submission
 
 
+def ingest_submissions(subreddit, database):
+	for submission in subreddit.sub_object.new(limit=25):
+		db_submission = database.session.query(Submission).filter_by(submission_id=submission.id).first()
+		if db_submission is None:
+			db_submission = add_submission(subreddit, database, None, submission)
+
+
 def ingest_comments(subreddit, database):
 	for comment in subreddit.sub_object.comments(limit=None):
 		if database.session.query(Comment).filter_by(comment_id=comment.id).count() > 0:
@@ -155,7 +168,7 @@ def ingest_comments(subreddit, database):
 		))
 
 		if db_submission.is_restricted and comment.author.name != "CustomModBot":
-			author_result = author_restricted(subreddit, database, db_user)
+			author_result = author_comment_restricted(subreddit, database, db_user)
 			if author_result is not None:
 				counters.user_comments.labels(subreddit=subreddit.name, result="filtered").inc()
 				action_comment(subreddit, db_comment, author_result)

@@ -134,6 +134,7 @@ if __name__ == "__main__":
 				compow.parse_modmail(subreddit)
 
 			for subreddit in [bay_area]:
+				shared.ingest_submissions(subreddit, database)
 				shared.ingest_comments(subreddit, database)
 				shared.check_flair_changes(subreddit, database)
 				shared.backfill_karma(subreddit, database)
@@ -166,3 +167,6 @@ if __name__ == "__main__":
 			break
 
 		time.sleep(1 * 60)
+
+# update logging statements
+# purge data after year
