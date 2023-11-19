@@ -111,6 +111,25 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 
 	if reprocess_submission:
 		log.info(f"Marking submission {reddit_submission.id} as restricted")
+
+		db_user = db_submission.author
+		submission_filter_date = datetime.utcnow() - timedelta(days=7)
+		previous_submission = database.session.query(Submission) \
+			.filter(Submission.id != db_submission.id) \
+			.filter(Submission.author == db_user) \
+			.filter(Submission.is_restricted == 1) \
+			.filter(Submission.created > submission_filter_date) \
+			.order_by(Submission.created.desc()) \
+			.first()
+
+		if previous_submission is not None:
+			log.warning(
+				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
+				f"u/{db_user.name} would be removed. "
+				f"[Recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}/>) "
+				f"from {(datetime.utcnow() - previous_submission.created).days} days ago."
+			)
+
 		if subreddit.restricted['action'] == "remove":
 			bot_comment = reddit_submission.reply(
 				"Due to the topic, enhanced moderation has been turned on for this thread. Comments from users new "

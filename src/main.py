@@ -170,3 +170,9 @@ if __name__ == "__main__":
 
 # update logging statements
 # purge data after year
+# rescan submissions too
+# query database for recent crime submissions by user
+# check for double ban
+# warn/ban on regular report
+# update bayarea for new reports
+# ban on incorrect flair
