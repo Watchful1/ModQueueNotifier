@@ -121,7 +121,7 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				.filter(Submission.submission_id != db_submission.submission_id) \
 				.filter(Submission.author == db_user) \
 				.filter(Submission.is_restricted == True) \
-				.filter(Comment.is_removed == False)\
+				.filter(Submission.is_removed == False)\
 				.filter(Submission.created > submission_filter_date) \
 				.order_by(Submission.created.desc()) \
 				.first()
