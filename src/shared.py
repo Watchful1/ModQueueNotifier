@@ -90,6 +90,7 @@ def action_comment(subreddit, comment, author_result):
 def add_submission(subreddit, database, db_submission, reddit_submission):
 	flair_restricted = subreddit.flair_restricted(reddit_submission.link_flair_text)
 	reprocess_submission = False
+	flair_changed = False
 	if db_submission is None:
 		db_user = database.session.query(User).filter_by(name=reddit_submission.author.name).first()
 		if db_user is None:
@@ -108,27 +109,66 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 	elif db_submission.is_restricted is not flair_restricted:
 		db_submission.is_restricted = flair_restricted
 		reprocess_submission = flair_restricted
+		flair_changed = True
 
 	if reprocess_submission:
 		log.info(f"Marking submission {reddit_submission.id} as restricted")
 
-		db_user = db_submission.author
-		submission_filter_date = datetime.utcnow() - timedelta(days=7)
-		previous_submission = database.session.query(Submission) \
-			.filter(Submission.submission_id != db_submission.submission_id) \
-			.filter(Submission.author == db_user) \
-			.filter(Submission.is_restricted == 1) \
-			.filter(Submission.created > submission_filter_date) \
-			.order_by(Submission.created.desc()) \
-			.first()
+		if subreddit.days_between_restricted_submissions is not None:
+			db_user = db_submission.author
+			submission_filter_date = datetime.utcnow() - timedelta(days=subreddit.days_between_restricted_submissions)
+			previous_submission = database.session.query(Submission) \
+				.filter(Submission.submission_id != db_submission.submission_id) \
+				.filter(Submission.author == db_user) \
+				.filter(Submission.is_restricted == True) \
+				.filter(Comment.is_removed == False)\
+				.filter(Submission.created > submission_filter_date) \
+				.order_by(Submission.created.desc()) \
+				.first()
 
-		if previous_submission is not None:
-			log.warning(
-				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
-				f"u/{db_user.name} would be removed. "
-				f"[Recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}/>) "
-				f"from {(datetime.utcnow() - previous_submission.created).days} days ago."
-			)
+			if previous_submission is not None:
+				log.warning(
+					f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
+					f"u/{db_user.name} would be removed. "
+					f"[Recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}/>) "
+					f"from {(datetime.utcnow() - previous_submission.created).days} days ago."
+				)
+
+				comment_count = database.session.query(Comment).filter(Comment.submission_id == db_submission.submission_id).count()
+				if comment_count >= 10:
+					log.warning(f"Not removing submission because it has {comment_count} comments")
+				# else:
+					# reddit_submission.mod.remove()
+					# reddit_submission.mod.lock()
+					# reddit_submission.reply(
+					# 	f"This subreddit restricts submissions on sensitive topics to once every "
+					# 	f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]"
+					# 	f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) was "
+					# 	f"{(datetime.utcnow() - previous_submission.created).days} days ago, this one has been removed.\n\n"
+					# 	f"You can read more about this policy [here]() and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) "
+					# 	f"if you think this is a mistake."
+					# )
+
+				if flair_changed:
+					log.warning(f"Banning u/{db_user.name} for {subreddit.days_between_restricted_submissions} days due to incorrectly flaired submission")
+					# ban_message = f"Your [recent submission](https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/) was incorrectly " \
+					# 	f"flaired. Since the correct flair would have indicated it was a sensitive topic and you posted another [sensitive topic submission]" \
+					# 	f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) within the last " \
+					# 	f"{subreddit.days_between_restricted_submissions} days, you have been automatically banned.\n\n" \
+					# 	f"You can read more about this policy [here]() and reply to this message if you think this is a mistake."
+					#
+					# subreddit.sub_object.banned.add(
+					# 	db_user.name,
+					# 	duration=subreddit.days_between_restricted_submissions,
+					# 	ban_reason=f"Deliberate incorrect flair",
+					# 	ban_message=ban_message)
+					# utils.add_usernote(
+					# 	subreddit,
+					# 	db_user.name,
+					# 	subreddit.get_account_name(),
+					# 	"spamwarn",
+					# 	f"{subreddit.days_between_restricted_submissions}d - incorrect flair",
+					# 	f"https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/")
 
 		if subreddit.restricted['action'] == "remove":
 			bot_comment = reddit_submission.reply(
@@ -411,7 +451,7 @@ def process_modqueue_comments(subreddit):
 							f"Rule {report_object['rule']} warning",
 							warn_ban_message,
 							from_subreddit=subreddit.name)
-						log.warning(f"Searching for modmail to archive after warn/ban:")
+						log.warning(f"Searching for modmail to archive after warn:")
 						for conversation in list(subreddit.all_modmail()):
 							log.warning(f"{conversation.id} : {len(conversation.authors)} authors : u/{conversation.authors[0].name} : {len(conversation.messages)} messages")
 							if len(conversation.authors) == 1 and \
@@ -446,7 +486,7 @@ def process_modqueue_comments(subreddit):
 						user_note = UserNotes(username)
 						user_note.add_new_note(note)
 						sub_notes.add_update_user_note(user_note)
-					utils.save_usernotes(subreddit, sub_notes, f"\"create new note on user {username}\" via OWMatchThreads")
+					utils.save_usernotes(subreddit, sub_notes, f"\"create new note on user {username}\" via {subreddit.get_account_name()}")
 
 					count_removed = utils.recursive_remove_comments(item)
 					if count_removed > 1:

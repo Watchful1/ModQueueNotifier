@@ -76,45 +76,15 @@ def save_usernotes(subreddit, sub_notes, change_reason):
 				log.warning(f"Failed to save usernotes for r/{subreddit.name} with backup reddit, SpecialError")
 
 
-def add_usernote(sub, user, mod_name, type, note_text, permalink):
-	notes_json, notes = get_usernotes(sub)
+def add_usernote(subreddit, username, mod_name, type, note_text, permalink):
+	sub_notes = get_usernotes(subreddit)
+	user_note = sub_notes.get_user_note(username)
+	note = Note.build_note(sub_notes, mod_name, type, note_text, datetime.utcnow(), permalink)
 
-	warning_index = None
-	for index, warning in enumerate(notes_json["constants"]["warnings"]):
-		if warning == type:
-			warning_index = index
-			break
-	if warning_index is None:
-		log.warning(f"Unable to find usernote index for type: {type}")
-		return
-	mod_index = None
-	for index, mod in enumerate(notes_json["constants"]["users"]):
-		if mod == mod_name:
-			mod_index = index
-			break
-	if mod_index is None:
-		log.warning(f"Unable to find mod index for: {mod_name}")
-		return
-
-	groups = re.search(r'(?:comments/)(\w{3,8})(?:/.+/)(\w{3,8})', permalink, flags=re.IGNORECASE)
-	if not groups:
-		log.warning(f"Unable to extract ids from: {permalink}")
-		return
+	if user_note is not None:
+		user_note.add_new_note(note)
 	else:
-		link_id = groups.group(1)
-		comment_id = groups.group(2)
-		link = f"l,{link_id},{comment_id}"
-
-	note = {
-		'n': note_text,
-		't': int(datetime.utcnow().timestamp()),
-		'm': mod_index,
-		'l': link,
-		'w': warning_index
-	}
-	if user.name in notes:
-		notes[user.name]['ns'].insert(0, note)
-	else:
-		notes[user.name] = {'ns': [note]}
-
-	save_usernotes(sub, notes_json, notes, user)
+		user_note = UserNotes(username)
+		user_note.add_new_note(note)
+		sub_notes.add_update_user_note(user_note)
+	save_usernotes(subreddit, sub_notes, f"\"create new note on user {username}\" via {subreddit.get_account_name()}")

@@ -68,6 +68,9 @@ class Submission(Base):
 	created = Column(DateTime, nullable=False)
 	is_notified = Column(Boolean, nullable=False, default=False)
 	author_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+	karma = Column(Integer)
+	is_removed = Column(Boolean, nullable=False)
+	is_deleted = Column(Boolean, nullable=False)
 
 	author = relationship("User", lazy="joined")
 
@@ -76,13 +79,19 @@ class Submission(Base):
 		submission_id,
 		created,
 		is_restricted,
-		author
+		author,
+		karma=None,
+		is_removed=False,
+		is_deleted=False
 	):
 		self.submission_id = submission_id
 		self.author = author
 		self.created = created
 		self.is_restricted = is_restricted
 		self.is_notified = False
+		self.karma = karma
+		self.is_removed = is_removed
+		self.is_deleted = is_deleted
 
 	def __str__(self):
 		return self.submission_id

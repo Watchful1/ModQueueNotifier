@@ -106,7 +106,8 @@ if __name__ == "__main__":
 		backup_reddit=instances['Watchful1'],
 		name_in_modmails=False,
 		webhook=discord_logging.get_config_var(praw_file, "CustomModBot", 'webhook_moderatoronly'),
-		discord_link="https://discord.gg/35z3AA9xp3"
+		discord_link="https://discord.gg/35z3AA9xp3",
+		days_between_restricted_submissions=7
 	)
 
 	last_backup = None
@@ -169,6 +170,9 @@ if __name__ == "__main__":
 		time.sleep(1 * 60)
 
 # update logging statements
+	# on comment/submission removals from reddit and anti-evil, link the object. And whether it was already removed
+	# add addremovalreason to list
+	# dont log submissions when I change the flair
 # purge data after year
 # rescan submissions too
 # query database for recent crime submissions by user
@@ -176,3 +180,4 @@ if __name__ == "__main__":
 # warn/ban on regular report
 # update bayarea for new reports
 # ban on incorrect flair
+# check for manual flair changes on rescan

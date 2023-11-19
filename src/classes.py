@@ -26,7 +26,8 @@ class Subreddit:
 			backup_reddit=None,
 			name_in_modmails=True,
 			filtered_users=None,
-			discord_link=None
+			discord_link=None,
+			days_between_restricted_submissions=None
 	):
 		self.name = name
 		self.sub_id = sub_id
@@ -48,6 +49,7 @@ class Subreddit:
 		else:
 			self.filtered_users = []
 		self.discord_link = discord_link
+		self.days_between_restricted_submissions = days_between_restricted_submissions
 
 		self.sub_object = reddit.subreddit(self.name)
 		self.post_checked = datetime.utcnow()
@@ -79,6 +81,9 @@ class Subreddit:
 			7,
 			14
 		]
+
+	def get_account_name(self):
+		return self.reddit.user.me().name
 
 	def get_next_ban_tier(self, current_days, get_current_tier):
 		prev_tier = self.ban_tiers[0]
