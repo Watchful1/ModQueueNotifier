@@ -101,7 +101,8 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 			submission_id=reddit_submission.id,
 			created=datetime.utcfromtimestamp(reddit_submission.created_utc),
 			is_restricted=flair_restricted,
-			author=db_user
+			author=db_user,
+			subreddit_id=subreddit.sub_id
 		)
 		database.session.add(db_submission)
 		reprocess_submission = flair_restricted
@@ -114,6 +115,7 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 	if reprocess_submission:
 		log.info(f"Marking submission {reddit_submission.id} as restricted")
 
+		added_comment = False
 		if subreddit.days_between_restricted_submissions is not None:
 			db_user = db_submission.author
 			submission_filter_date = datetime.utcnow() - timedelta(days=subreddit.days_between_restricted_submissions)
@@ -140,7 +142,7 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				# else:
 					# reddit_submission.mod.remove()
 					# reddit_submission.mod.lock()
-					# reddit_submission.reply(
+					# bot_comment = reddit_submission.reply(
 					# 	f"This subreddit restricts submissions on sensitive topics to once every "
 					# 	f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]"
 					# 	f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) was "
@@ -148,6 +150,8 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 					# 	f"You can read more about this policy [here]() and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) "
 					# 	f"if you think this is a mistake."
 					# )
+					# subreddit.approve_comment(bot_comment, True)
+					# added_comment = True
 
 				if flair_changed:
 					log.warning(f"Banning u/{db_user.name} for {subreddit.days_between_restricted_submissions} days due to incorrectly flaired submission")
@@ -170,22 +174,11 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 					# 	f"{subreddit.days_between_restricted_submissions}d - incorrect flair",
 					# 	f"https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/")
 
-		if subreddit.restricted['action'] == "remove":
+		if subreddit.restricted['action'] == "remove" and not added_comment:
 			bot_comment = reddit_submission.reply(
 				"Due to the topic, enhanced moderation has been turned on for this thread. Comments from users new "
 				"to r/bayarea will be automatically removed. See [this thread](https://www.reddit.com/r/bayarea/comments/p8hnzl/automatically_removing_comments_from_new_users_in/) for more details.")
-			try:
-				bot_comment.mod.approve()
-			except prawcore.exceptions.Forbidden:
-				log.warning(f"Failed to approve comment, forbidden")
-				if subreddit.backup_reddit is not None:
-					try:
-						subreddit.backup_reddit.comment(id=bot_comment.id).mod.approve()
-						log.warning(f"Approved comment with backup reddit")
-					except Exception as e:
-						log.warning(f"Failed to approve comment with backup reddit, {e}")
-
-			bot_comment.mod.distinguish(how="yes", sticky=True)
+			subreddit.approve_comment(bot_comment, True)
 
 		good_comments, bad_comments = get_comments_for_thread(subreddit, database, reddit_submission.id)
 		if len(bad_comments) + len(good_comments) > 0:
@@ -273,40 +266,67 @@ def check_flair_changes(subreddit, database):
 
 
 def backfill_karma(subreddit, database):
-	max_comment_date = datetime.utcnow() - timedelta(hours=24)
-	comments = database.session.query(Comment)\
-		.filter(Comment.karma == None)\
-		.filter(Comment.created < max_comment_date)\
-		.filter(Comment.subreddit_id == subreddit.sub_id)\
-		.all()
+	max_date = datetime.utcnow() - timedelta(hours=24)
 	fullnames = []
-	comment_map = {}
-	for comment in comments:
-		fullnames.append(f"t1_{comment.comment_id}")
-		comment_map[comment.comment_id] = comment
+	object_map = {}
+	for comment in database.session.query(Comment)\
+			.filter(Comment.karma == None)\
+			.filter(Comment.created < max_date)\
+			.filter(Comment.subreddit_id == subreddit.sub_id)\
+			.all():
+		fullnames.append(comment.fullname())
+		object_map[comment.fullname()] = comment
+	# for submission in database.session.query(Submission)\
+	# 		.filter(Submission.karma == None)\
+	# 		.filter(Submission.created < max_date)\
+	# 		.filter(Submission.subreddit_id == subreddit.sub_id)\
+	# 		.all():
+	# 	fullnames.append(submission.fullname())
+	# 	object_map[submission.fullname()] = submission
 
-		if len(fullnames) >= 100 or len(fullnames) == len(comments):
-			reddit_comments = subreddit.reddit.info(fullnames)
-			for reddit_comment in reddit_comments:
-				sub_comment = comment_map[reddit_comment.id]
-				sub_comment.karma = reddit_comment.score
-				if reddit_comment.body == "[removed]" or reddit_comment.banned_by is not None:
-					counters.backfill_comments.labels(subreddit=subreddit.name, result="removed").inc()
-					sub_comment.is_removed = True
-				elif reddit_comment.body == "[deleted]":
-					counters.backfill_comments.labels(subreddit=subreddit.name, result="deleted").inc()
-					sub_comment.is_deleted = True
+	if len(fullnames) > 0:
+		reddit_objects = subreddit.reddit.info(fullnames)
+		for reddit_object in reddit_objects:
+			db_object = object_map[reddit_object.name]
+			db_object.karma = reddit_object.score
+			obj_type = "object"
+			result = "updated"
+			if reddit_object.name.startswith("t1_"):
+				obj_type = "comment"
+				if reddit_object.body == "[removed]" or reddit_object.banned_by is not None:
+					result = "removed"
+					db_object.is_removed = True
+				elif reddit_object.body == "[deleted]":
+					result = "deleted"
+					db_object.is_deleted = True
+			elif reddit_object.name.startswith("t3_"):
+				obj_type = "submission"
+				if (reddit_object.removed_by_category in
+						{"moderator", "anti_evil_ops", "community_ops", "legal_operations", "copyright_takedown", "reddit", "author", "automod_filtered"} or
+						reddit_object.banned_by is not None):
+					result = "removed"
+					db_object.is_removed = True
+				elif reddit_object.removed_by_category == "deleted":
+					result = "deleted"
+					db_object.is_deleted = True
 				else:
-					counters.backfill_comments.labels(subreddit=subreddit.name, result="updated").inc()
+					result = "removed"
+					db_object.is_removed = True
+					log.warning(f"Unknown removed category : {reddit_object.removed_by_category} : <https://www.reddit.com/r/{subreddit.name}/comments/{db_object.submission_id}/>")
 
-				del comment_map[reddit_comment.id]
+				if subreddit.flair_restricted(reddit_object.link_flair_text) and not db_object.is_restricted:
+					log.warning(
+						f"User may have added restricted flair after submitting : "
+						f"<https://www.reddit.com/r/{subreddit.name}/comments/{db_object.submission_id}/>")
+			else:
+				log.warning(f"Something went wrong backfilling karma. Unknown object type: {reddit_object.name}")
+			counters.backfill.labels(subreddit=subreddit.name, type=obj_type, result=result).inc()
 
-			if len(comment_map) > 0:
-				counters.backfill_comments.labels(subreddit=subreddit.name, result="missing").inc(len(comment_map))
-				log.warning(f"{len(comment_map)} comments missing when backfilling karma for r/{subreddit.name}. {(','.join(comment_map.keys()))}")
+			del object_map[reddit_object.name]
 
-			comment_map = {}
-			fullnames = []
+		if len(object_map) > 0:
+			counters.backfill.labels(subreddit=subreddit.name, type="object", result="missing").inc(len(object_map))
+			log.warning(f"{len(object_map)} objects missing when backfilling karma for r/{subreddit.name}. {(','.join(object_map.keys()))}")
 
 
 def ingest_log(subreddit, database):

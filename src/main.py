@@ -175,9 +175,9 @@ if __name__ == "__main__":
 	# dont log submissions when I change the flair
 # purge data after year
 # rescan submissions too
-# query database for recent crime submissions by user
 # check for double ban
 # warn/ban on regular report
 # update bayarea for new reports
-# ban on incorrect flair
 # check for manual flair changes on rescan
+# update link in comment/ban message
+# update the enhanced moderation is turned on comment

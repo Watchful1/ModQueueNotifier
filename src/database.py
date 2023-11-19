@@ -71,6 +71,7 @@ class Submission(Base):
 	karma = Column(Integer)
 	is_removed = Column(Boolean, nullable=False)
 	is_deleted = Column(Boolean, nullable=False)
+	subreddit_id = Column(Integer, nullable=False)
 
 	author = relationship("User", lazy="joined")
 
@@ -80,6 +81,7 @@ class Submission(Base):
 		created,
 		is_restricted,
 		author,
+		subreddit_id,
 		karma=None,
 		is_removed=False,
 		is_deleted=False
@@ -89,12 +91,16 @@ class Submission(Base):
 		self.created = created
 		self.is_restricted = is_restricted
 		self.is_notified = False
+		self.subreddit_id = subreddit_id
 		self.karma = karma
 		self.is_removed = is_removed
 		self.is_deleted = is_deleted
 
 	def __str__(self):
 		return self.submission_id
+
+	def fullname(self):
+		return f"t3_{self.submission_id}"
 
 
 class Comment(Base):
@@ -138,6 +144,9 @@ class Comment(Base):
 
 	def __str__(self):
 		return self.comment_id
+
+	def fullname(self):
+		return f"t1_{self.submission_id}"
 
 
 class Database:

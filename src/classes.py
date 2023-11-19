@@ -4,6 +4,7 @@ import json
 import base64
 import zlib
 import re
+import prawcore.exceptions
 
 log = discord_logging.get_logger()
 
@@ -84,6 +85,22 @@ class Subreddit:
 
 	def get_account_name(self):
 		return self.reddit.user.me().name
+
+	def approve_comment(self, comment, sticky=False):
+		try:
+			comment.mod.approve()
+		except prawcore.exceptions.Forbidden:
+			log.warning(f"Failed to approve comment, forbidden")
+			if self.backup_reddit is not None:
+				try:
+					self.backup_reddit.comment(id=comment.id).mod.approve()
+					log.warning(f"Approved comment with backup reddit")
+				except Exception as e:
+					log.warning(
+						f"Failed to approve comment with backup reddit, {e}")
+
+		if sticky:
+			comment.mod.distinguish(how="yes", sticky=True)
 
 	def get_next_ban_tier(self, current_days, get_current_tier):
 		prev_tier = self.ban_tiers[0]
