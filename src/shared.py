@@ -115,7 +115,7 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 		db_user = db_submission.author
 		submission_filter_date = datetime.utcnow() - timedelta(days=7)
 		previous_submission = database.session.query(Submission) \
-			.filter(Submission.id != db_submission.id) \
+			.filter(Submission.submission_id != db_submission.submission_id) \
 			.filter(Submission.author == db_user) \
 			.filter(Submission.is_restricted == 1) \
 			.filter(Submission.created > submission_filter_date) \
