@@ -169,15 +169,15 @@ if __name__ == "__main__":
 
 		time.sleep(1 * 60)
 
-# update logging statements
-	# on comment/submission removals from reddit and anti-evil, link the object. And whether it was already removed
-	# add addremovalreason to list
-	# dont log submissions when I change the flair
 # purge data after year
-# rescan submissions too
 # check for double ban
 # warn/ban on regular report
 # update bayarea for new reports
-# check for manual flair changes on rescan
-# update link in comment/ban message
 # update the enhanced moderation is turned on comment
+
+# turn on:
+# rescan submissions too
+# remove posts from authors with recent crime posts
+# ban users who use the wrong flair
+# update link in comment/ban message, enhanced moderation is on
+

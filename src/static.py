@@ -6,7 +6,7 @@ COMPOW_MODERATORS = {
 	#"merger3": "143730443777343488",
 	#"DerWaechter_": "193382989718093833",
 	#"connlocks": "139462031894904832",
-	"Sorglos": "166045025153581056",
+	#"Sorglos": "166045025153581056",
 	"Watchful1": "95296130761371648",
 	"blankepitaph": "262708160790396928",
 	#"Quantum027": "368589871092334612",
@@ -15,7 +15,7 @@ COMPOW_MODERATORS = {
 	#"wotugondo": "385460099138715650",
 	"ModWilliam": "321107093773877257",
 	"Dobvius": "171644935446069249",
-	"FelipeDoesStats2": "277798095906144257",
+	#"FelipeDoesStats2": "277798095906144257",
 	"lolburger13": "272096309320613888",
 	"TheUltimate721": "330534850849406977",
 	"UnknownQTY": "432625266532024330",
@@ -30,7 +30,7 @@ BAYAREA_MODERATORS = {
 	"-dantastic-": "543108284849324034",
 	"which_objective": "714692771687956511",
 	"MsNewKicks": "811705167673688086",
-	"DuckyFreeman": "318215764303675392",
+	#"DuckyFreeman": "318215764303675392",
 	"AutoModerator": "AutoModerator",
 	"CustomModBot": "CustomModBot",
 	"BotDefense": "BotDefense",
@@ -60,6 +60,7 @@ COMPOW_KNOWN_LOG_TYPES = {
 	'modmail_enrollment',
 	'markoriginalcontent',
 	'submit_scheduled_post',
+	'addremovalreason',
 }
 
 BAYAREA_KNOWN_LOG_TYPES = {

@@ -343,6 +343,8 @@ def ingest_log(subreddit, database):
 		warning_items = []
 		if log_item.mod.name not in subreddit.moderators:
 			warning_type = "1"
+			if log_item.action in {'removecomment', 'removelink', 'marknsfw'}:
+				warning_items.append(f"[{log_item.target_title}](<https://www.reddit.com/{log_item.target_permalink}>) by u/{log_item.target_author}")
 		elif subreddit.warning_log_types is not None and log_item.action in subreddit.warning_log_types:
 			sub_filters = subreddit.warning_log_types[log_item.action]
 			for item, value in sub_filters.items():
