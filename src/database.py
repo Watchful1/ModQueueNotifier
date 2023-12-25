@@ -211,7 +211,7 @@ class Database:
 		subquery = (self.session.query(comment1, func.count('*').label("count"))
 			.group_by(comment1.submission_id)
 			.subquery())
-		for submission in self.session.query(Submission, subquery.c.count)\
+		for submission in self.session.query(Submission)\
 				.join(subquery, Submission.id == subquery.c.submission_id, isouter=True)\
 				.filter(subquery.c.count == None).filter(Submission.created < before_date).limit(1000).all():
 			deleted_submission_ids.append(submission.submission_id)
