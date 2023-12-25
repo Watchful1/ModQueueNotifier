@@ -147,10 +147,11 @@ if __name__ == "__main__":
 				shared.ping_queues(subreddit, database)
 
 			if last_backup is None or last_backup < datetime.utcnow() - timedelta(hours=24):
-				# try:
-				# 	database.purge()
-				# except Exception as err:
-				# 	utils.process_error(f"Error purging database", err, traceback.format_exc())
+				try:
+					database.update_object_counts()
+					#database.purge()
+				except Exception as err:
+					utils.process_error(f"Error purging database", err, traceback.format_exc())
 
 				try:
 					log.info("Backing up database")
