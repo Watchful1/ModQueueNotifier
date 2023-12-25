@@ -350,7 +350,7 @@ def backfill_karma(subreddit, database):
 
 		if len(object_map) > 0:
 			counters.backfill.labels(subreddit=subreddit.name, type="object", result="missing").inc(len(object_map))
-			log.warning(f"{len(object_map)} objects missing when backfilling karma for r/{subreddit.name}. {(','.join(object_map.keys()))}")
+			log.warning(f"{len(object_map)} objects missing when backfilling karma for r/{subreddit.name}. {(','.join(object_map.keys()))} : {(','.join(fullnames))}")
 
 
 def ingest_log(subreddit, database):
