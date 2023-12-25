@@ -153,7 +153,7 @@ class Comment(Base):
 		return self.comment_id
 
 	def fullname(self):
-		return f"t1_{self.submission_id}"
+		return f"t1_{self.comment_id}"
 
 
 class Database:
