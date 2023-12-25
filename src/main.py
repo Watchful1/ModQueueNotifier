@@ -148,6 +148,8 @@ if __name__ == "__main__":
 
 			if last_backup is None or last_backup < datetime.utcnow() - timedelta(hours=24):
 				try:
+					database.purge()
+
 					log.info("Backing up database")
 					database.backup()
 					last_backup = datetime.utcnow()
@@ -169,15 +171,19 @@ if __name__ == "__main__":
 
 		time.sleep(1 * 60)
 
-# purge data after year
 # check for double ban
 # warn/ban on regular report
 # update bayarea for new reports
-# update the enhanced moderation is turned on comment
+# also use submissions when calculating limits
+# no self posts for political threads
+# message to check user history according to bot
 
 # turn on:
 # rescan submissions too
 # remove posts from authors with recent crime posts
 # ban users who use the wrong flair
 # update link in comment/ban message, enhanced moderation is on
+# remove posts from authors with insufficient history
+# database purge
+
 

@@ -1,9 +1,16 @@
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine, Column, String, DateTime, Integer, ForeignKey, Boolean
-from sqlalchemy.orm import sessionmaker, relationship
-from datetime import datetime
+from sqlalchemy.orm import sessionmaker, relationship, aliased
+from sqlalchemy.sql import func
+from datetime import datetime, timedelta
 import os
+import time
 from shutil import copyfile
+import discord_logging
+
+log = discord_logging.get_logger()
+
+import counters
 
 
 Base = declarative_base()
@@ -181,3 +188,48 @@ class Database:
 		)
 
 		self.init(self.location)
+
+	def update_object_counts(self):
+		for subreddit, subreddit_id in (("competitiveoverwatch", 1), ("bayarea", 2)):
+			counters.objects.labels(type="log_item", subreddit=subreddit).set(self.session.query(LogItem).filter(subreddit_id == subreddit_id).count())
+		counters.objects.labels(type="submission", subreddit="bayarea").set(self.session.query(Submission).filter(subreddit_id == 2).count())
+		counters.objects.labels(type="comment", subreddit="bayarea").set(self.session.query(Comment).filter(subreddit_id == 2).count())
+		counters.objects.labels(type="user", subreddit="bayarea").set(self.session.query(User).count())
+
+	def purge(self):
+		start_time = time.perf_counter()
+		deleted_comment_ids = []
+		before_date = datetime.utcnow() - timedelta(days=365)
+		for comment in self.session.query(Comment).filter(Comment.created < before_date).limit(1000).all():
+			deleted_comment_ids.append(comment.comment_id)
+			#self.session.delete(comment)
+		if not len(deleted_comment_ids):
+			deleted_comment_ids.append("none")
+
+		deleted_submission_ids = []
+		comment1 = aliased(Comment)
+		subquery = (self.session.query(comment1, func.count('*').label("count"))
+			.group_by(comment1.submission_id)
+			.subquery())
+		for submission in self.session.query(Submission, subquery.c.count)\
+				.join(subquery, Submission.id == subquery.c.submission_id, isouter=True)\
+				.filter(subquery.c.count == None).filter(Submission.created < before_date).limit(1000).all():
+			deleted_submission_ids.append(submission.submission_id)
+			#self.session.delete(submission)
+		if not len(deleted_submission_ids):
+			deleted_submission_ids.append("none")
+
+		deleted_users = []
+		for user in self.session.query(User)\
+				.join(Comment, User.id == Comment.author_id, isouter=True)\
+				.join(Submission, User.id == Submission.author_id, isouter=True)\
+				.filter(Comment.id == None).filter(Submission.id == None).limit(1000).all():
+			deleted_users.append(f"{user.name}:{user.id}")
+			#self.session.delete(user)
+		if not len(deleted_users):
+			deleted_users.append("none")
+
+		delta_time = time.perf_counter() - start_time
+		log.info(
+			f"Cleanup {' '.join(deleted_comment_ids)} : {' '.join(deleted_submission_ids)} : {' '.join(deleted_users)} in "
+			f"{delta_time:.2} seconds")

@@ -116,6 +116,7 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 		log.info(f"Marking submission {reddit_submission.id} as restricted")
 
 		db_user = db_submission.author
+		added_comment = False
 		if author_comment_restricted(subreddit, database, db_user):
 			log.warning(
 				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
@@ -137,7 +138,6 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 			# 	subreddit.approve_comment(bot_comment, True)
 			# 	added_comment = True
 
-		added_comment = False
 		if subreddit.days_between_restricted_submissions is not None:
 			submission_filter_date = datetime.utcnow() - timedelta(days=subreddit.days_between_restricted_submissions)
 			previous_submission = database.session.query(Submission) \
@@ -199,6 +199,9 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 			bot_comment = reddit_submission.reply(
 				"Due to the topic, enhanced moderation has been turned on for this thread. Comments from users new "
 				"to r/bayarea will be automatically removed. See [this thread](https://www.reddit.com/r/bayarea/comments/p8hnzl/automatically_removing_comments_from_new_users_in/) for more details.")
+			# bot_comment = reddit_submission.reply(
+			# 	f"The flair of this posts indicates it's a controversial topic. Enhanced moderation has been turned on for this thread. Comments from users without a history of commenting in r/{subreddit.name} "
+			# 	"will be automatically removed. You can read more about this policy [here]().")
 			subreddit.approve_comment(bot_comment, True)
 
 		good_comments, bad_comments = get_comments_for_thread(subreddit, database, reddit_submission.id)
