@@ -199,7 +199,7 @@ class Database:
 	def cleanup(self):
 		count_submissions_2_3 = 0
 		count_submissions_2_3_total = self.session.query(Submission).join(Comment).filter(Submission.subreddit_id == 2).filter(Comment.subreddit_id == 3).count()
-		for submission in self.session.query(Submission).join(Comment).filter(Submission.subreddit_id == 2).filter(Comment.subreddit_id == 3).limit(100000).all():
+		for submission in self.session.query(Submission).join(Comment).filter(Submission.subreddit_id == 2).filter(Comment.subreddit_id == 3).limit(10000).all():
 			submission.subreddit_id = 3
 			count_submissions_2_3 += 1
 		log.info(f"Updated subreddit ids : {count_submissions_2_3}/{count_submissions_2_3_total}")
