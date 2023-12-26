@@ -241,6 +241,9 @@ class Database:
 			deleted_users.append("none")
 
 		delta_time = time.perf_counter() - start_time
+		# log.info(
+		# 	f"Cleanup {' '.join(deleted_comment_ids)} : {' '.join(deleted_submission_ids)} : {' '.join(deleted_users)} in "
+		# 	f"{delta_time:.2f} seconds")
 		log.info(
-			f"Cleanup {' '.join(deleted_comment_ids)} : {' '.join(deleted_submission_ids)} : {' '.join(deleted_users)} in "
+			f"Cleanup {len(deleted_comment_ids)} comments : {' '.join(deleted_submission_ids)} : {' '.join(deleted_users)} in "
 			f"{delta_time:.2f} seconds")
