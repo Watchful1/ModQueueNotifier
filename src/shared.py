@@ -350,6 +350,8 @@ def backfill_karma(subreddit, database):
 				elif reddit_object.removed_by_category == "deleted":
 					result = "deleted"
 					db_object.is_deleted = True
+				elif reddit_object.removed_by_category is None:
+					pass # not removed
 				else:
 					result = "removed"
 					db_object.is_removed = True
