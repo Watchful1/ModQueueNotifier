@@ -148,11 +148,11 @@ if __name__ == "__main__":
 
 			database.update_object_counts()
 			database.cleanup()
+			try:
+				database.purge()
+			except Exception as err:
+				utils.process_error(f"Error purging database", err, traceback.format_exc())
 			if last_backup is None or last_backup < datetime.utcnow() - timedelta(hours=24):
-				try:
-					database.purge()
-				except Exception as err:
-					utils.process_error(f"Error purging database", err, traceback.format_exc())
 
 				try:
 					log.info("Backing up database")
