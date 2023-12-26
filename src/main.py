@@ -179,7 +179,6 @@ if __name__ == "__main__":
 # warn/ban on regular report
 # update bayarea for new reports
 # also use submissions when calculating limits
-# no self posts for political threads
 # message to check user history according to bot
 
 # turn on:

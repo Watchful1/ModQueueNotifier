@@ -116,29 +116,32 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 		log.info(f"Marking submission {reddit_submission.id} as restricted")
 
 		db_user = db_submission.author
-		added_comment = False
-		if author_comment_restricted(subreddit, database, db_user):
+		comment_text = None
+		if reddit_submission.is_self or reddit_submission.selftext is not None:
 			log.warning(
 				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
-				f"u/{db_user.name} would be removed. Insufficient subreddit history"
+				f"u/{db_user.name} removed. Self posts not allowed"
 			)
 
-			comment_count = database.session.query(Comment).filter(Comment.submission_id == db_submission.submission_id).count()
-			# if comment_count >= 10:
-			# 	log.warning(f"Not removing submission because it has {comment_count} comments")
-			# else:
-			# 	reddit_submission.mod.remove()
-			# 	reddit_submission.mod.lock()
-			# 	bot_comment = reddit_submission.reply(
-			# 		f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. "
-			# 		f"You don't meet our requirements so your submission has been removed.\n\n"
-			# 		f"You can read more about this policy [here]() and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) "
-			# 		f"if you think this is a mistake."
-			# 	)
-			# 	subreddit.approve_comment(bot_comment, True)
-			# 	added_comment = True
+			# comment_text = \
+			# 	f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. " \
+			# 	f"You don't meet our requirements so your submission has been removed.\n\n" \
+			# 	f"You can read more about this policy [here]() and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
+			# 	f"if you think this is a mistake."
 
-		if subreddit.days_between_restricted_submissions is not None:
+		elif author_comment_restricted(subreddit, database, db_user):
+			log.warning(
+				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
+				f"u/{db_user.name} removed. Insufficient subreddit history"
+			)
+
+			# comment_text = \
+			# 	f"This subreddit requires submissions on sensitive topics to be direct links to a news article. " \
+			# 	f"Your submission was either a self post or a link that included submission text so it has been removed.\n\n" \
+			# 	f"You can read more about this policy [here]() and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
+			# 	f"if you think this is a mistake."
+
+		elif subreddit.days_between_restricted_submissions is not None:
 			submission_filter_date = datetime.utcnow() - timedelta(days=subreddit.days_between_restricted_submissions)
 			previous_submission = database.session.query(Submission) \
 				.filter(Submission.submission_id != db_submission.submission_id) \
@@ -152,27 +155,18 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 			if previous_submission is not None:
 				log.warning(
 					f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
-					f"u/{db_user.name} would be removed. "
+					f"u/{db_user.name} removed. "
 					f"[Recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}/>) "
 					f"from {(datetime.utcnow() - previous_submission.created).days} days ago."
 				)
 
-				comment_count = database.session.query(Comment).filter(Comment.submission_id == db_submission.submission_id).count()
-				if comment_count >= 10:
-					log.warning(f"Not removing submission because it has {comment_count} comments")
-				# else:
-					# reddit_submission.mod.remove()
-					# reddit_submission.mod.lock()
-					# bot_comment = reddit_submission.reply(
-					# 	f"This subreddit restricts submissions on sensitive topics to once every "
-					# 	f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]"
-					# 	f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) was "
-					# 	f"{(datetime.utcnow() - previous_submission.created).days} days ago, this one has been removed.\n\n"
-					# 	f"You can read more about this policy [here]() and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) "
-					# 	f"if you think this is a mistake."
-					# )
-					# subreddit.approve_comment(bot_comment, True)
-					# added_comment = True
+				# comment_text = \
+				# 	f"This subreddit restricts submissions on sensitive topics to once every " \
+				# 	f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]" \
+				# 	f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) was " \
+				# 	f"{(datetime.utcnow() - previous_submission.created).days} days ago, this one has been removed.\n\n" \
+				# 	f"You can read more about this policy [here]() and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
+				# 	f"if you think this is a mistake."
 
 				if flair_changed:
 					log.warning(f"Banning u/{db_user.name} for {subreddit.days_between_restricted_submissions} days due to incorrectly flaired submission")
@@ -195,7 +189,17 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 					# 	f"{subreddit.days_between_restricted_submissions}d - incorrect flair",
 					# 	f"https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/")
 
-		if subreddit.restricted['action'] == "remove" and not added_comment:
+		if comment_text is not None:
+			comment_count = database.session.query(Comment).filter(Comment.submission_id == db_submission.submission_id).count()
+			if comment_count >= 10:
+				log.warning(f"Not removing submission because it has {comment_count} comments")
+			else:
+				reddit_submission.mod.remove()
+				reddit_submission.mod.lock()
+				bot_comment = reddit_submission.reply(comment_text)
+				subreddit.approve_comment(bot_comment, True)
+
+		elif subreddit.restricted['action'] == "remove":
 			bot_comment = reddit_submission.reply(
 				"Due to the topic, enhanced moderation has been turned on for this thread. Comments from users new "
 				"to r/bayarea will be automatically removed. See [this thread](https://www.reddit.com/r/bayarea/comments/p8hnzl/automatically_removing_comments_from_new_users_in/) for more details.")
