@@ -202,7 +202,7 @@ class Database:
 		before_date = datetime.utcnow() - timedelta(days=365)
 		for comment in self.session.query(Comment).filter(Comment.created < before_date).limit(1000).all():
 			deleted_comment_ids.append(comment.comment_id)
-			#self.session.delete(comment)
+			self.session.delete(comment)
 		if not len(deleted_comment_ids):
 			deleted_comment_ids.append("none")
 
@@ -225,11 +225,11 @@ class Database:
 				.join(Submission, User.id == Submission.author_id, isouter=True)\
 				.filter(Comment.id == None).filter(Submission.id == None).limit(1000).all():
 			deleted_users.append(f"{user.name}:{user.id}")
-			#self.session.delete(user)
+			self.session.delete(user)
 		if not len(deleted_users):
 			deleted_users.append("none")
 
 		delta_time = time.perf_counter() - start_time
 		log.info(
 			f"Cleanup {' '.join(deleted_comment_ids)} : {' '.join(deleted_submission_ids)} : {' '.join(deleted_users)} in "
-			f"{delta_time:.2} seconds")
+			f"{delta_time:.2f} seconds")
