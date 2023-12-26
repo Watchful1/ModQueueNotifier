@@ -175,11 +175,11 @@ if __name__ == "__main__":
 
 		time.sleep(1 * 60)
 
-# check for double ban
 # warn/ban on regular report
 # update bayarea for new reports
 # also use submissions when calculating limits
 # message to check user history according to bot
+# check for double ban
 
 # turn on:
 # rescan submissions too

@@ -60,16 +60,27 @@ def author_comment_restricted(subreddit, database, db_author):
 		.filter(Comment.is_removed == False)\
 		.filter(Comment.created < min_comment_date)\
 		.count()
+	count_submissions = database.session.query(Submission)\
+		.filter(Submission.subreddit_id == subreddit.sub_id)\
+		.filter(Submission.author == db_author)\
+		.filter(Submission.is_removed == False)\
+		.filter(Submission.created < min_comment_date)\
+		.count()
 	if count_comments < subreddit.restricted['comments']:
 		return f"comments {count_comments} < {subreddit.restricted['comments']}"
 
-	count_karma = database.session.query(func.sum(Comment.karma).label('karma'))\
+	count_comment_karma = database.session.query(func.sum(Comment.karma).label('karma'))\
 		.filter(Comment.subreddit_id == subreddit.sub_id)\
 		.filter(Comment.author == db_author)\
 		.filter(Comment.created < min_comment_date)\
 		.scalar()
-	if count_karma < subreddit.restricted['karma']:
-		return f"karma {count_karma} < {subreddit.restricted['karma']}"
+	count_submission_karma = database.session.query(func.sum(Submission.karma).label('karma'))\
+		.filter(Submission.subreddit_id == subreddit.sub_id)\
+		.filter(Submission.author == db_author)\
+		.filter(Submission.created < min_comment_date)\
+		.scalar()
+	if count_comment_karma < subreddit.restricted['karma']:
+		return f"karma {count_comment_karma} < {subreddit.restricted['karma']}"
 
 	return None
 
@@ -301,16 +312,18 @@ def backfill_karma(subreddit, database):
 			.filter(Comment.karma == None)\
 			.filter(Comment.created < max_date)\
 			.filter(Comment.subreddit_id == subreddit.sub_id)\
+			.limit(1000)\
 			.all():
 		fullnames.append(comment.fullname())
 		object_map[comment.fullname()] = comment
-	# for submission in database.session.query(Submission)\
-	# 		.filter(Submission.karma == None)\
-	# 		.filter(Submission.created < max_date)\
-	# 		.filter(Submission.subreddit_id == subreddit.sub_id)\
-	# 		.all():
-	# 	fullnames.append(submission.fullname())
-	# 	object_map[submission.fullname()] = submission
+	for submission in database.session.query(Submission)\
+			.filter(Submission.karma == None)\
+			.filter(Submission.created < max_date)\
+			.filter(Submission.subreddit_id == subreddit.sub_id)\
+			.limit(1000)\
+			.all():
+		fullnames.append(submission.fullname())
+		object_map[submission.fullname()] = submission
 
 	if len(fullnames) > 0:
 		reddit_objects = subreddit.reddit.info(fullnames)
