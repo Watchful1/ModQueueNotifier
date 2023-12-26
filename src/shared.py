@@ -128,7 +128,7 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 
 		db_user = db_submission.author
 		comment_text = None
-		if reddit_submission.is_self or reddit_submission.selftext is not None:
+		if reddit_submission.is_self or (reddit_submission.selftext is not None and reddit_submission.selftext != ""):
 			log.warning(
 				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
 				f"u/{db_user.name} removed. Self posts not allowed"
