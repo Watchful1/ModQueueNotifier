@@ -188,5 +188,6 @@ if __name__ == "__main__":
 # update link in comment/ban message, enhanced moderation is on
 # remove posts from authors with insufficient history
 # database purge
+# warning on flair change during rescan
 
 

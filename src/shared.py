@@ -351,16 +351,16 @@ def backfill_karma(subreddit, database):
 					result = "deleted"
 					db_object.is_deleted = True
 				elif reddit_object.removed_by_category is None:
-					pass # not removed
+					pass  # not removed
 				else:
 					result = "removed"
 					db_object.is_removed = True
 					log.warning(f"Unknown removed category : {reddit_object.removed_by_category} : <https://www.reddit.com/r/{subreddit.name}/comments/{db_object.submission_id}/>")
 
-				if subreddit.flair_restricted(reddit_object.link_flair_text) and not db_object.is_restricted:
-					log.warning(
-						f"User may have added restricted flair after submitting : "
-						f"<https://www.reddit.com/r/{subreddit.name}/comments/{db_object.submission_id}/>")
+				# if subreddit.flair_restricted(reddit_object.link_flair_text) and not db_object.is_restricted:
+				# 	log.warning(
+				# 		f"User may have added restricted flair after submitting : "
+				# 		f"<https://www.reddit.com/r/{subreddit.name}/comments/{db_object.submission_id}/>")
 			else:
 				log.warning(f"Something went wrong backfilling karma. Unknown object type: {reddit_object.name}")
 			counters.backfill.labels(subreddit=subreddit.name, type=obj_type, result=result).inc()
