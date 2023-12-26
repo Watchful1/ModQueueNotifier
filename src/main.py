@@ -174,7 +174,8 @@ if __name__ == "__main__":
 		if args.once:
 			break
 
-		time.sleep(1 * 60)
+		#time.sleep(1 * 60)
+		time.sleep(1 * 5)
 
 # warn/ban on regular report
 # update bayarea for new reports
