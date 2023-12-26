@@ -516,7 +516,6 @@ def process_modqueue_comments(subreddit):
 							f"Rule {report_object['rule']} warning",
 							warn_ban_message,
 							from_subreddit=subreddit.name)
-						log.warning(f"Searching for modmail to archive after warn:")
 						for conversation in list(subreddit.all_modmail()):
 							#log.warning(f"{conversation.id} : {len(conversation.authors)} authors : u/{conversation.authors[0].name} : {len(conversation.messages)} messages")
 							if len(conversation.authors) == 2 and \

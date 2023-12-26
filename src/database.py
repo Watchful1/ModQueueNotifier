@@ -211,22 +211,22 @@ class Database:
 		for comment in self.session.query(Comment).filter(Comment.created < before_date).limit(10000).all():
 			deleted_comment_ids.append(comment.comment_id)
 			self.session.delete(comment)
-		for comment in self.session.query(Comment).filter(Comment.subreddit_id == 3).limit(10000).all():
-			deleted_comment_ids.append(comment.comment_id)
-			self.session.delete(comment)
 		if not len(deleted_comment_ids):
 			deleted_comment_ids.append("none")
 
 		deleted_submission_ids = []
-		# comment1 = aliased(Comment)
-		# subquery = (self.session.query(comment1, func.count('*').label("count"))
-		# 	.group_by(comment1.submission_id)
-		# 	.subquery())
-		# for submission in self.session.query(Submission)\
-		# 		.join(subquery, Submission.id == subquery.c.submission_id, isouter=True)\
-		# 		.filter(subquery.c.count == None).filter(Submission.created < before_date).limit(1000).all():
-		# 	deleted_submission_ids.append(submission.submission_id)
-		# 	#self.session.delete(submission)
+		comment1 = aliased(Comment)
+		subquery = (self.session.query(comment1, func.count('*').label("count"))
+			.group_by(comment1.submission_id)
+			.subquery())
+		for submission in self.session.query(Submission)\
+				.join(subquery, Submission.id == subquery.c.submission_id, isouter=True)\
+				.filter(subquery.c.count == None).filter(Submission.created < before_date).limit(1000).all():
+			deleted_submission_ids.append(submission.submission_id)
+			#self.session.delete(submission)
+		for submission in self.session.query(Submission).filter(Submission.subreddit_id == 3).limit(1000).all():
+			deleted_submission_ids.append(submission.submission_id)
+			self.session.delete(submission)
 		if not len(deleted_submission_ids):
 			deleted_submission_ids.append("none")
 
@@ -245,5 +245,5 @@ class Database:
 		# 	f"Cleanup {' '.join(deleted_comment_ids)} : {' '.join(deleted_submission_ids)} : {' '.join(deleted_users)} in "
 		# 	f"{delta_time:.2f} seconds")
 		log.info(
-			f"Cleanup {len(deleted_comment_ids)} comments : {' '.join(deleted_submission_ids)} : {' '.join(deleted_users)} in "
+			f"Cleanup {len(deleted_comment_ids)} comments : {len(deleted_submission_ids)} submissions : {' '.join(deleted_users)} in "
 			f"{delta_time:.2f} seconds")
