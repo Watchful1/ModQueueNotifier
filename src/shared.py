@@ -316,14 +316,14 @@ def backfill_karma(subreddit, database):
 			.all():
 		fullnames.append(comment.fullname())
 		object_map[comment.fullname()] = comment
-	for submission in database.session.query(Submission)\
-			.filter(Submission.karma == None)\
-			.filter(Submission.created < max_date)\
-			.filter(Submission.subreddit_id == subreddit.sub_id)\
-			.limit(1000)\
-			.all():
-		fullnames.append(submission.fullname())
-		object_map[submission.fullname()] = submission
+	# for submission in database.session.query(Submission)\
+	# 		.filter(Submission.karma == None)\
+	# 		.filter(Submission.created < max_date)\
+	# 		.filter(Submission.subreddit_id == subreddit.sub_id)\
+	# 		.limit(1000)\
+	# 		.all():
+	# 	fullnames.append(submission.fullname())
+	# 	object_map[submission.fullname()] = submission
 
 	if len(fullnames) > 0:
 		reddit_objects = subreddit.reddit.info(fullnames)

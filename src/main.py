@@ -147,6 +147,7 @@ if __name__ == "__main__":
 				shared.ping_queues(subreddit, database)
 
 			database.update_object_counts()
+			database.cleanup()
 			if last_backup is None or last_backup < datetime.utcnow() - timedelta(hours=24):
 				try:
 					database.purge()

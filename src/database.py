@@ -196,6 +196,17 @@ class Database:
 		counters.objects.labels(type="comment", subreddit="bayarea").set(self.session.query(Comment).filter(subreddit_id == 2).count())
 		counters.objects.labels(type="user", subreddit="bayarea").set(self.session.query(User).count())
 
+	def cleanup(self):
+		count_submissions_0_2 = 0
+		count_submissions_2_3 = 0
+		for submission in self.session.query(Submission).join(Comment).filter(Submission.subreddit_id == 0).filter(Comment.subreddit_id == 2).limit(1000).all():
+			submission.subreddit_id = 2
+			count_submissions_0_2 += 1
+		for submission in self.session.query(Submission).join(Comment).filter(Submission.subreddit_id == 2).filter(Comment.subreddit_id == 3).limit(1000).all():
+			submission.subreddit_id = 3
+			count_submissions_2_3 += 1
+		log.info(f"Updated subreddit ids : {count_submissions_0_2} : {count_submissions_2_3}")
+
 	def purge(self):
 		start_time = time.perf_counter()
 		deleted_comment_ids = []
