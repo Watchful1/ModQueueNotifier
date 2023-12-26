@@ -503,12 +503,12 @@ def process_modqueue_comments(subreddit):
 							from_subreddit=subreddit.name)
 						log.warning(f"Searching for modmail to archive after warn:")
 						for conversation in list(subreddit.all_modmail()):
-							log.warning(f"{conversation.id} : {len(conversation.authors)} authors : u/{conversation.authors[0].name} : {len(conversation.messages)} messages")
+							#log.warning(f"{conversation.id} : {len(conversation.authors)} authors : u/{conversation.authors[0].name} : {len(conversation.messages)} messages")
 							if len(conversation.authors) == 2 and \
 									conversation.authors[0].name in {subreddit.get_account_name(), username} and \
 									conversation.authors[1].name in {subreddit.get_account_name(), username} and \
 									len(conversation.messages) == 1:
-								log.warning(f"Archiving {conversation.authors[0].name} message: {conversation.id}")
+								log.info(f"Archiving {conversation.authors[0].name} message: {conversation.id}")
 								conversation.archive()
 								subreddit.all_modmail().remove(conversation)
 								break
