@@ -146,9 +146,9 @@ if __name__ == "__main__":
 			for subreddit in [comp_ow]:
 				shared.ping_queues(subreddit, database)
 
+			database.update_object_counts()
 			if last_backup is None or last_backup < datetime.utcnow() - timedelta(hours=24):
 				try:
-					database.update_object_counts()
 					database.purge()
 				except Exception as err:
 					utils.process_error(f"Error purging database", err, traceback.format_exc())
