@@ -198,14 +198,16 @@ class Database:
 
 	def cleanup(self):
 		count_submissions_0_2 = 0
+		count_submissions_0_2_total = self.session.query(Submission).join(Comment).filter(Submission.subreddit_id == 0).filter(Comment.subreddit_id == 2).count()
 		count_submissions_2_3 = 0
+		count_submissions_2_3_total = self.session.query(Submission).join(Comment).filter(Submission.subreddit_id == 2).filter(Comment.subreddit_id == 3).count()
 		for submission in self.session.query(Submission).join(Comment).filter(Submission.subreddit_id == 0).filter(Comment.subreddit_id == 2).limit(1000).all():
 			submission.subreddit_id = 2
 			count_submissions_0_2 += 1
 		for submission in self.session.query(Submission).join(Comment).filter(Submission.subreddit_id == 2).filter(Comment.subreddit_id == 3).limit(1000).all():
 			submission.subreddit_id = 3
 			count_submissions_2_3 += 1
-		log.info(f"Updated subreddit ids : {count_submissions_0_2} : {count_submissions_2_3}")
+		log.info(f"Updated subreddit ids : {count_submissions_0_2}/{count_submissions_0_2_total} : {count_submissions_2_3}/{count_submissions_2_3_total}")
 
 	def purge(self):
 		start_time = time.perf_counter()
@@ -214,6 +216,9 @@ class Database:
 		for comment in self.session.query(Comment).filter(Comment.created < before_date).limit(1000).all():
 			deleted_comment_ids.append(comment.comment_id)
 			self.session.delete(comment)
+		# for comment in self.session.query(Comment).filter(Comment.subreddit_id == 3).limit(1000).all():
+		# 	deleted_comment_ids.append(comment.comment_id)
+		# 	self.session.delete(comment)
 		if not len(deleted_comment_ids):
 			deleted_comment_ids.append("none")
 
