@@ -208,12 +208,12 @@ class Database:
 		start_time = time.perf_counter()
 		deleted_comment_ids = []
 		before_date = datetime.utcnow() - timedelta(days=365)
-		for comment in self.session.query(Comment).filter(Comment.created < before_date).limit(1000).all():
+		for comment in self.session.query(Comment).filter(Comment.created < before_date).limit(10000).all():
 			deleted_comment_ids.append(comment.comment_id)
 			self.session.delete(comment)
-		# for comment in self.session.query(Comment).filter(Comment.subreddit_id == 3).limit(1000).all():
-		# 	deleted_comment_ids.append(comment.comment_id)
-		# 	self.session.delete(comment)
+		for comment in self.session.query(Comment).filter(Comment.subreddit_id == 3).limit(10000).all():
+			deleted_comment_ids.append(comment.comment_id)
+			self.session.delete(comment)
 		if not len(deleted_comment_ids):
 			deleted_comment_ids.append("none")
 
