@@ -223,7 +223,7 @@ class Database:
 				.join(subquery, Submission.id == subquery.c.submission_id, isouter=True)\
 				.filter(subquery.c.count == None).filter(Submission.created < before_date).limit(1000).all():
 			deleted_submission_ids.append(submission.submission_id)
-			#self.session.delete(submission)
+			self.session.delete(submission)
 		for submission in self.session.query(Submission).filter(Submission.subreddit_id == 3).limit(1000).all():
 			deleted_submission_ids.append(submission.submission_id)
 			self.session.delete(submission)
