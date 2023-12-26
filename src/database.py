@@ -207,15 +207,15 @@ class Database:
 			deleted_comment_ids.append("none")
 
 		deleted_submission_ids = []
-		comment1 = aliased(Comment)
-		subquery = (self.session.query(comment1, func.count('*').label("count"))
-			.group_by(comment1.submission_id)
-			.subquery())
-		for submission in self.session.query(Submission)\
-				.join(subquery, Submission.id == subquery.c.submission_id, isouter=True)\
-				.filter(subquery.c.count == None).filter(Submission.created < before_date).limit(1000).all():
-			deleted_submission_ids.append(submission.submission_id)
-			#self.session.delete(submission)
+		# comment1 = aliased(Comment)
+		# subquery = (self.session.query(comment1, func.count('*').label("count"))
+		# 	.group_by(comment1.submission_id)
+		# 	.subquery())
+		# for submission in self.session.query(Submission)\
+		# 		.join(subquery, Submission.id == subquery.c.submission_id, isouter=True)\
+		# 		.filter(subquery.c.count == None).filter(Submission.created < before_date).limit(1000).all():
+		# 	deleted_submission_ids.append(submission.submission_id)
+		# 	#self.session.delete(submission)
 		if not len(deleted_submission_ids):
 			deleted_submission_ids.append("none")
 
