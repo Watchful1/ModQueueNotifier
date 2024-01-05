@@ -90,11 +90,15 @@ def author_comment_restricted(subreddit, database, db_author):
 		.filter(Comment.author == db_author)\
 		.filter(Comment.created < min_comment_date)\
 		.scalar()
+	if count_comment_karma is None:
+		count_comment_karma = 0
 	count_submission_karma = database.session.query(func.sum(Submission.karma).label('karma'))\
 		.filter(Submission.subreddit_id == subreddit.sub_id)\
 		.filter(Submission.author == db_author)\
 		.filter(Submission.created < min_comment_date)\
 		.scalar()
+	if count_submission_karma is None:
+		count_submission_karma = 0
 	if count_comment_karma + count_submission_karma < subreddit.restricted['karma']:
 		return f"karma {count_comment_karma} + {count_submission_karma} = {count_comment_karma + count_submission_karma} < {subreddit.restricted['karma']}"
 
