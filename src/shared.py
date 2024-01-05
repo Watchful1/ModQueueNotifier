@@ -363,7 +363,7 @@ def process_modqueue_submissions_v2(subreddit):
 
 def process_modqueue_submissions(subreddit):
 	for item in list(subreddit.modqueue()):
-		if len(subreddit.report_reasons) and item.fullname.startswith("t3_") and len(item.mod_reports):
+		if subreddit.report_reasons is not None and item.fullname.startswith("t3_") and len(item.mod_reports):
 			for report_reason, mod_name in item.mod_reports:
 				if report_reason in subreddit.report_reasons:
 					removal_dict = subreddit.report_reasons[report_reason]
