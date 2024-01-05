@@ -4,6 +4,7 @@ import json
 import base64
 import zlib
 import re
+import requests
 import prawcore.exceptions
 
 log = discord_logging.get_logger()
@@ -200,6 +201,10 @@ class Subreddit:
 		else:
 			return f"u/{name}"
 
+	def post_to_discord(self, message):
+		requests.post(self.webhook, data={"content": message})
+
+
 
 class SubredditNotes:
 	def __init__(self, subreddit_name, version, users, warnings, all_notes=None):
@@ -327,14 +332,14 @@ class UserNotes:
 			if note_type == 'ban':
 				match = re.search(r'^\d+', note.get_text())
 				if match:
-					return int(match.group(0)), note_is_old
+					return int(match.group(0)), note_is_old, note.get_datetime()
 				else:
 					log.warning(f"u/{self.username} has a ban, but can't get length from: {note.get_text()}")
 			elif note_type == 'abusewarn':
-				return 0, note_is_old
+				return 0, note_is_old, note.get_datetime()
 			elif note_type == 'permban':
-				return -1, note_is_old
-		return None, False
+				return -1, note_is_old, note.get_datetime()
+		return None, False, None
 
 
 class Note:

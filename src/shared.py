@@ -142,77 +142,83 @@ def process_modqueue_comments_v2(subreddit):
 				sub_notes = utils.get_usernotes(subreddit)
 				username = item.author.name
 				user_note = sub_notes.get_user_note(username)
-				if days is None:
-					if user_note is not None:
-						days_ban, note_is_old = user_note.get_recent_warn_ban()
-						log.info(f"Processing new comment report: {report_reason}. Got {days_ban} days ban from notes")
-					else:
-						days_ban, note_is_old = None, False
-						log.info(f"Processing new comment report: {report_reason}. No usernotes")
-					days = subreddit.get_next_ban_tier(days_ban, note_is_old)
-					if days == -1:
-						action_string = "permabanned based on usernotes"
-					elif days == 0:
-						action_string = "warned based on usernotes"
-					else:
-						action_string = f"banned for {days} days based on usernotes"
-
-				item_link = f"https://www.reddit.com{item.permalink}"
-				reason_text = rule.comment_text
-				if additional_note is not None:
-					reason_text = reason_text + "\n\n" + additional_note
-				warn_ban_message = f"{reason_text}\n\n{item_link}"
-				if subreddit.name_in_modmails:
-					warn_ban_message += f"\n\nFrom u/{mod_name}"
-				if days == 0:
-					log.info(f"Warning u/{username}, rule {rule.rule_number} from u/{mod_name}")
-					try:
-						item.author.message(
-							f"Rule {rule.rule_number} warning",
-							warn_ban_message,
-							from_subreddit=subreddit.name)
-					except praw.exceptions.RedditAPIException:
-						log.warning(f"Error sending warning message to u/{item.author.name}")
-					found = False
-					for conversation in list(subreddit.all_modmail()):
-						#log.warning(f"{conversation.id} : {len(conversation.authors)} authors : u/{conversation.authors[0].name} : {len(conversation.messages)} messages")
-						if len(conversation.authors) == 2 and \
-								conversation.authors[0].name in {subreddit.get_account_name(), username} and \
-								conversation.authors[1].name in {subreddit.get_account_name(), username} and \
-								len(conversation.messages) == 1:
-							log.info(f"Archiving {conversation.authors[0].name} message: {conversation.id}")
-							conversation.archive()
-							subreddit.all_modmail().remove(conversation)
-							found = True
-							break
-					if not found:
-						log.warning(f"Couldn't find modmail to archive")
-
-					note = Note.build_note(sub_notes, mod_name, "abusewarn", rule.short_text, datetime.utcnow(), item_link)
-				else:
-					if days == -1:
-						log.warning(f"Banning u/{username} permanently, rule {rule.rule_number} from u/{mod_name}")
-						subreddit.sub_object.banned.add(
-							item.author,
-							ban_reason=f"{rule.short_text} u/{mod_name}",
-							ban_message=warn_ban_message)
-						note = Note.build_note(sub_notes, mod_name, "permban", rule.short_text, datetime.utcnow(), item_link)
-					else:
-						log.info(f"Banning u/{username} for {days} days, rule {rule.rule_number} from u/{mod_name}")
-						subreddit.sub_object.banned.add(
-							item.author,
-							duration=days,
-							ban_reason=f"{rule.short_text} u/{mod_name}",
-							ban_message=warn_ban_message)
-						note = Note.build_note(sub_notes, mod_name, "ban", f"{days}d - {rule.short_text}", datetime.utcnow(), item_link)
-
 				if user_note is not None:
-					user_note.add_new_note(note)
+					days_ban, note_is_old, note_created = user_note.get_recent_warn_ban()
+					log.info(f"Processing new comment report: {report_reason}. Got {days_ban} days ban from notes")
 				else:
-					user_note = UserNotes(username)
-					user_note.add_new_note(note)
-					sub_notes.add_update_user_note(user_note)
-				utils.save_usernotes(subreddit, sub_notes, f"\"create new note on user {username}\" via {subreddit.get_account_name()}")
+					days_ban, note_is_old, note_created = None, False, None
+					log.info(f"Processing new comment report: {report_reason}. No usernotes")
+
+				if note_created is not None and note_created > datetime.utcfromtimestamp(item.created_utc):
+					log.info(f"This item was created before the most recent note, skipping ban")
+					subreddit.post_to_discord(f"{subreddit.get_discord_name(mod_name)}: The [comment you reported](<https://www.reddit.com{item.permalink}>) was posted before their most recent warn/ban. To avoid double banning I am only removing the comment.")
+
+				else:
+					if days is None:
+						days = subreddit.get_next_ban_tier(days_ban, note_is_old)
+						if days == -1:
+							action_string = "permabanned based on usernotes"
+						elif days == 0:
+							action_string = "warned based on usernotes"
+						else:
+							action_string = f"banned for {days} days based on usernotes"
+
+					item_link = f"https://www.reddit.com{item.permalink}"
+					reason_text = rule.comment_text
+					if additional_note is not None:
+						reason_text = reason_text + "\n\n" + additional_note
+					warn_ban_message = f"{reason_text}\n\n{item_link}"
+					if subreddit.name_in_modmails:
+						warn_ban_message += f"\n\nFrom u/{mod_name}"
+					if days == 0:
+						log.info(f"Warning u/{username}, rule {rule.rule_number} from u/{mod_name}")
+						try:
+							item.author.message(
+								f"Rule {rule.rule_number} warning",
+								warn_ban_message,
+								from_subreddit=subreddit.name)
+						except praw.exceptions.RedditAPIException:
+							log.warning(f"Error sending warning message to u/{item.author.name}")
+						found = False
+						for conversation in list(subreddit.all_modmail()):
+							#log.warning(f"{conversation.id} : {len(conversation.authors)} authors : u/{conversation.authors[0].name} : {len(conversation.messages)} messages")
+							if len(conversation.authors) == 2 and \
+									conversation.authors[0].name in {subreddit.get_account_name(), username} and \
+									conversation.authors[1].name in {subreddit.get_account_name(), username} and \
+									len(conversation.messages) == 1:
+								log.info(f"Archiving {conversation.authors[0].name} message: {conversation.id}")
+								conversation.archive()
+								subreddit.all_modmail().remove(conversation)
+								found = True
+								break
+						if not found:
+							log.warning(f"Couldn't find modmail to archive")
+
+						note = Note.build_note(sub_notes, mod_name, "abusewarn", rule.short_text, datetime.utcnow(), item_link)
+					else:
+						if days == -1:
+							log.warning(f"Banning u/{username} permanently, rule {rule.rule_number} from u/{mod_name}")
+							subreddit.sub_object.banned.add(
+								item.author,
+								ban_reason=f"{rule.short_text} u/{mod_name}",
+								ban_message=warn_ban_message)
+							note = Note.build_note(sub_notes, mod_name, "permban", rule.short_text, datetime.utcnow(), item_link)
+						else:
+							log.info(f"Banning u/{username} for {days} days, rule {rule.rule_number} from u/{mod_name}")
+							subreddit.sub_object.banned.add(
+								item.author,
+								duration=days,
+								ban_reason=f"{rule.short_text} u/{mod_name}",
+								ban_message=warn_ban_message)
+							note = Note.build_note(sub_notes, mod_name, "ban", f"{days}d - {rule.short_text}", datetime.utcnow(), item_link)
+
+					if user_note is not None:
+						user_note.add_new_note(note)
+					else:
+						user_note = UserNotes(username)
+						user_note.add_new_note(note)
+						sub_notes.add_update_user_note(user_note)
+					utils.save_usernotes(subreddit, sub_notes, f"\"create new note on user {username}\" via {subreddit.get_account_name()}")
 
 				count_removed = utils.recursive_remove_comments(item)
 				if count_removed > 1:
@@ -260,10 +266,10 @@ def process_modqueue_comments(subreddit):
 					user_note = sub_notes.get_user_note(username)
 					if days is None:
 						if user_note is not None:
-							days_ban, note_is_old = user_note.get_recent_warn_ban()
+							days_ban, note_is_old, note_created = user_note.get_recent_warn_ban()
 							log.info(f"Processing new comment report: {report_reason}. Got {days_ban} days ban from notes")
 						else:
-							days_ban, note_is_old = None, False
+							days_ban, note_is_old, note_created = None, False, None
 							log.info(f"Processing new comment report: {report_reason}. No usernotes")
 						days = subreddit.get_next_ban_tier(days_ban, note_is_old)
 						if days == -1:
@@ -339,7 +345,7 @@ def process_modqueue_comments(subreddit):
 
 def process_modqueue_submissions_v2(subreddit):
 	for item in list(subreddit.modqueue()):
-		if len(subreddit.rules) and item.fullname.startswith("t3_") and len(item.mod_reports):
+		if subreddit.rules is not None and item.fullname.startswith("t3_") and len(item.mod_reports):
 			for report_reason, mod_name in item.mod_reports:
 				rule = subreddit.rules.get(report_reason)
 				if rule is not None:
@@ -470,7 +476,7 @@ def ping_queues(subreddit, database):
 	if subreddit.last_posted is None or datetime.utcnow() - timedelta(hours=1) > subreddit.last_posted:
 		if count_string is not None:
 			log.info(f"Posting: {count_string}")
-			requests.post(subreddit.webhook, data={"content": count_string})
+			subreddit.post_to_discord(count_string)
 			subreddit.last_posted = datetime.utcnow()
 			subreddit.has_posted = True
 		else:
@@ -495,7 +501,7 @@ def ping_queues(subreddit, database):
 			if mod_clear is not None:
 				clear_string = f"{mod_clear} cleared the queues!"
 				log.info(clear_string)
-				requests.post(subreddit.webhook, data={"content": clear_string})
+				subreddit.post_to_discord(clear_string)
 			else:
 				log.info("Couldn't figure out who cleared the queue")
 
@@ -530,4 +536,4 @@ limit 100'''))
 			subreddit.recent_overlaps.put(fullname)
 			blame_string = f"{subreddit.get_discord_name(mod1)} {action_name1} and then {subreddit.get_discord_name(mod2)} {action_name2} [this {item_type}](<https://www.reddit.com{permalink}>). Make sure the second action is correct"
 			log.info(f"Posting: {blame_string}")
-			requests.post(subreddit.webhook, data={"content": blame_string})
+			subreddit.post_to_discord(blame_string)

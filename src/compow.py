@@ -36,7 +36,7 @@ def process_submissions(subreddit):
 			blame_string = f"{subreddit.get_discord_name(submission.approved_by)} approved without adding a flair: <https://www.reddit.com{submission.permalink}>"
 			log.info(f"Posting: {blame_string}")
 			subreddit.posts_notified.put(submission.id)
-			requests.post(subreddit.webhook, data={"content": blame_string})
+			subreddit.post_to_discord(blame_string)
 
 
 def parse_modmail(subreddit):
