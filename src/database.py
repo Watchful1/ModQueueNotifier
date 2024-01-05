@@ -190,7 +190,7 @@ class Database:
 		self.init(self.location)
 
 	def update_object_counts(self):
-		for subreddit, subreddit_id in (("competitiveoverwatch", 1), ("bayarea", 2)):
+		for subreddit, subreddit_id in (("CompetitiveOverwatch", 1), ("bayarea", 2)):
 			counters.objects.labels(type="log_item", subreddit=subreddit).set(self.session.query(LogItem).filter_by(subreddit=subreddit).count())
 		counters.objects.labels(type="submission", subreddit="bayarea").set(self.session.query(Submission).filter_by(subreddit_id=2).count())
 		counters.objects.labels(type="comment", subreddit="bayarea").set(self.session.query(Comment).filter_by(subreddit_id=2).count())

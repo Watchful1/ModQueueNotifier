@@ -72,6 +72,7 @@ if __name__ == "__main__":
 		warning_log_types=static.COMPOW_WARNING_LOG_TYPES,
 		report_reasons=static.COMPOW_REPORT_REASONS,
 		comment_report_reasons=static.COMPOW_COMMENT_REPORT_REASONS,
+		rules=static.COMPOW_RULES,
 		reapprove_reasons=['#2 No Low-Value Content', 'This is spam'],
 		thresholds={
 			'unmod': {'track': True, 'post': 15, 'ping': 20},
@@ -91,6 +92,7 @@ if __name__ == "__main__":
 		known_log_types=static.BAYAREA_KNOWN_LOG_TYPES,
 		warning_log_types=static.BAYAREA_WARNING_LOG_TYPES,
 		comment_report_reasons=static.BAYAREA_COMMENT_REPORT_REASONS,
+		rules=static.BAYAREA_RULES,
 		thresholds={
 			'unmod': {'track': False},
 			'modqueue': {'track': True},
@@ -122,12 +124,14 @@ if __name__ == "__main__":
 			for subreddit in [comp_ow, bay_area]:
 				shared.ingest_log(subreddit, database)
 				shared.process_modqueue_comments(subreddit)
+				#shared.process_modqueue_comments_v2(subreddit)
+				shared.process_modqueue_submissions(subreddit)
+				#shared.process_modqueue_submissions_v2(subreddit)
 				shared.process_modqueue_old(subreddit)
 				shared.post_overlapping_actions(subreddit, database)
 
 			for subreddit in [comp_ow]:
 				shared.process_modqueue_reapprove(subreddit)
-				shared.process_modqueue_submissions(subreddit)
 				shared.log_highlighted_modmail(subreddit, start_time)
 				shared.log_archived_modmail_no_response(subreddit, start_time)
 
@@ -135,10 +139,10 @@ if __name__ == "__main__":
 				compow.parse_modmail(subreddit)
 
 			for subreddit in [bay_area]:
-				shared.ingest_submissions(subreddit, database)
-				shared.ingest_comments(subreddit, database)
-				shared.check_flair_changes(subreddit, database)
-				shared.backfill_karma(subreddit, database)
+				bayarea.ingest_submissions(subreddit, database)
+				bayarea.ingest_comments(subreddit, database)
+				bayarea.check_flair_changes(subreddit, database)
+				bayarea.backfill_karma(subreddit, database)
 
 			for subreddit in [comp_ow, bay_area]:
 				shared.count_queues(subreddit)
@@ -175,11 +179,7 @@ if __name__ == "__main__":
 			break
 
 		time.sleep(1 * 60)
-		#time.sleep(1 * 5)
 
-# warn/ban on regular report
-# update bayarea for new reports
-# also use submissions when calculating limits
 # message to check user history according to bot
 # check for double ban
 
@@ -191,5 +191,6 @@ if __name__ == "__main__":
 # remove posts from authors with insufficient history
 # database purge
 # warning on flair change during rescan
+# new comment/submission report processing
 
 

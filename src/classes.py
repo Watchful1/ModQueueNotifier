@@ -28,7 +28,8 @@ class Subreddit:
 			name_in_modmails=True,
 			filtered_users=None,
 			discord_link=None,
-			days_between_restricted_submissions=None
+			days_between_restricted_submissions=None,
+			rules=None,
 	):
 		self.name = name
 		self.sub_id = sub_id
@@ -51,6 +52,13 @@ class Subreddit:
 			self.filtered_users = []
 		self.discord_link = discord_link
 		self.days_between_restricted_submissions = days_between_restricted_submissions
+
+		self.rules = {}
+		self.rules_by_number = {}
+		if rules is not None:
+			for rule in rules:
+				self.rules[rule.report_reason] = rule
+				self.rules_by_number[f"r{rule.rule_number}"] = rule
 
 		self.sub_object = reddit.subreddit(self.name)
 		self.post_checked = datetime.utcnow()
@@ -435,3 +443,12 @@ class Queue:
 
 	def contains(self, item):
 		return item in self.set
+
+
+class Rule:
+	def __init__(self, report_reason, rule_number, post_text=None, comment_text=None, short_text=None):
+		self.report_reason = report_reason
+		self.rule_number = rule_number
+		self.post_text = post_text
+		self.comment_text = comment_text
+		self.short_text = short_text
