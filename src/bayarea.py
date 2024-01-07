@@ -152,15 +152,15 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 
 		db_user = db_submission.author
 		comment_text = None
-		if reddit_submission.is_self or (reddit_submission.selftext is not None and reddit_submission.selftext != ""):
+		if reddit_submission.is_self or reddit_submission.is_reddit_media_domain or (reddit_submission.selftext is not None and reddit_submission.selftext != ""):
 			log.warning(
 				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
 				f"u/{db_user.name} removed. Self posts not allowed"
 			)
 
 			# comment_text = \
-			# 	f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. " \
-			# 	f"You don't meet our requirements so your submission has been removed.\n\n" \
+			# 	f"This subreddit requires submissions on sensitive topics to be direct links to a news article. " \
+			# 	f"Your submission was either a self post or a link that included submission text so it has been removed.\n\n" \
 			# 	f"You can read more about this policy [here]() and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
 			# 	f"if you think this is a mistake."
 
@@ -171,8 +171,8 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 			)
 
 			# comment_text = \
-			# 	f"This subreddit requires submissions on sensitive topics to be direct links to a news article. " \
-			# 	f"Your submission was either a self post or a link that included submission text so it has been removed.\n\n" \
+			# 	f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. " \
+			# 	f"You don't meet our requirements so your submission has been removed.\n\n" \
 			# 	f"You can read more about this policy [here]() and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
 			# 	f"if you think this is a mistake."
 
