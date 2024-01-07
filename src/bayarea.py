@@ -404,7 +404,7 @@ def check_messages(subreddit, database):
 			log.info(f"Processing message from u/{item.author.name}")
 			target_user = None
 			if item.body is not None:
-				authors = re.findall(r'(?:[ +]/?u/)([\w-]+)', item.body)
+				authors = re.findall(r'(?:u/)([\w-]+)', item.body)
 				if len(authors):
 					target_user = authors[0]
 
