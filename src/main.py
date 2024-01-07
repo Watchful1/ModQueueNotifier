@@ -181,7 +181,6 @@ if __name__ == "__main__":
 
 		time.sleep(1 * 60)
 
-# message to check user history according to bot
 
 # turn on:
 # rescan submissions too

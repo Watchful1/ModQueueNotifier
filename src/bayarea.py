@@ -448,14 +448,15 @@ def check_messages(subreddit, database):
 
 					response_string = f"Subreddit history for u/{target_user}\n\n" \
 						f"Type|Comments|Submissions|Total\n---|---|---|---\n" \
-						f"Total|{total_comments}|{total_submissions}|{total_comments + total_submissions}\n" \
+						f"All|{total_comments}|{total_submissions}|{total_comments + total_submissions}\n" \
 						f"User deleted|{deleted_comments}|{deleted_submissions}|{deleted_comments + deleted_submissions}\n" \
 						f"Mod removed (possibly in restricted threads)|{removed_comments}|{removed_submissions}|{removed_comments + removed_submissions}\n" \
 						f"Older than threshold of {subreddit.restricted['comment_days']} days ago|{date_comments}|{date_submissions}|{date_comments + date_submissions}\n" \
 						f"Karma of eligible items|{date_comment_karma}|{date_submission_karma}|{date_comment_karma + date_submission_karma}\n\n" \
+						f"User deleted objects won't appear in the user page, but are still counted towards their history in the subreddit. Mod removed objects, including comments automatically removed from restricted threads, don't count towards their history.\n\n" \
 						f"Total eligible items: {date_comments + date_submissions} {('is' if count_eligible else 'is not')} enough to meet the limit of {subreddit.restricted['comments']}.\n\n" \
 						f"Total karma of eligible items: {date_comment_karma + date_submission_karma} {('is' if karma_eligible else 'is not')} enough to meet the limit of {subreddit.restricted['karma']} karma.\n\n" \
-						f"They are {('eligible' if count_eligible and karma_eligible else 'not eligible')} to post in restricted threads."
+						f"They are {('eligible' if count_eligible and karma_eligible else '**not eligible**')} to post in restricted threads."
 
 			item.reply(response_string)
 
