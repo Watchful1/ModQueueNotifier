@@ -1,7 +1,7 @@
 import discord_logging
-import prawcore.exceptions
-import requests
+import re
 import traceback
+from praw.models import Message
 from sqlalchemy.sql import func
 from datetime import datetime, timedelta
 
@@ -119,6 +119,10 @@ def action_comment(subreddit, comment, author_result):
 
 
 def add_submission(subreddit, database, db_submission, reddit_submission):
+	if reddit_submission.author is None or reddit_submission.author.name == "[deleted]":
+		log.warning(f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{reddit_submission.id}/>) doesnt have an author when adding to database")
+		return None
+
 	flair_restricted = subreddit.flair_restricted(reddit_submission.link_flair_text)
 	reprocess_submission = False
 	flair_changed = False
@@ -264,6 +268,8 @@ def ingest_comments(subreddit, database):
 		db_submission = database.session.query(Submission).filter_by(submission_id=comment.link_id[3:]).first()
 		if db_submission is None:
 			db_submission = add_submission(subreddit, database, None, comment.submission)
+		if db_submission is None:
+			continue
 
 		db_user = database.session.query(User).filter_by(name=comment.author.name).first()
 		if db_user is None:
@@ -390,3 +396,67 @@ def backfill_karma(subreddit, database):
 		if len(object_map) > 0:
 			counters.backfill.labels(subreddit=subreddit.name, type="object", result="missing").inc(len(object_map))
 			log.warning(f"{len(object_map)} objects missing when backfilling karma for r/{subreddit.name}. {(','.join(object_map.keys()))} : {(','.join(fullnames))}")
+
+
+def check_messages(subreddit, database):
+	for item in subreddit.reddit.unread():
+		if isinstance(item, Message) and item.author is not None and item.author.name in subreddit.moderators:
+			log.info(f"Processing message from u/{item.author.name}")
+			target_user = None
+			if item.body is not None:
+				authors = re.findall(r'(?:[ +]/?u/)([\w-]+)', item.body)
+				if len(authors):
+					target_user = authors[0]
+
+			if target_user is None:
+				response_string = f"Couldn't find a username in your message"
+				log.warning(f"Couldn't find a username in message from u/{item.author.name}")
+			else:
+				log.info(f"Looking up u/{target_user}")
+				db_author = database.session.query(User).filter_by(name=target_user).first()
+				if db_author is None:
+					log.info("User doesn't exist")
+					response_string = f"User u/{target_user} doesn't have any recorded history in the subreddit"
+				else:
+					min_comment_date = datetime.utcnow() - timedelta(days=subreddit.restricted['comment_days'])
+					total_comments, total_submissions, total_comment_karma, total_submission_karma = database.get_user_counts(
+						subreddit_id=subreddit.sub_id,
+						user=db_author,
+						threshold_date=datetime.utcnow(),
+					)
+					deleted_comments, deleted_submissions, deleted_comment_karma, deleted_submission_karma = database.get_user_counts(
+						subreddit_id=subreddit.sub_id,
+						user=db_author,
+						threshold_date=datetime.utcnow(),
+						is_deleted=True,
+					)
+					removed_comments, removed_submissions, removed_comment_karma, removed_submission_karma = database.get_user_counts(
+						subreddit_id=subreddit.sub_id,
+						user=db_author,
+						threshold_date=datetime.utcnow(),
+						is_removed=True,
+					)
+					date_comments, date_submissions, date_comment_karma, date_submission_karma = database.get_user_counts(
+						subreddit_id=subreddit.sub_id,
+						user=db_author,
+						threshold_date=min_comment_date,
+						is_removed=False,
+					)
+
+					count_eligible = date_comments + date_submissions >= subreddit.restricted['comments']
+					karma_eligible = date_comment_karma + date_submission_karma >= subreddit.restricted['karma']
+
+					response_string = f"Subreddit history for u/{target_user}\n\n" \
+						f"Type|Comments|Submissions|Total\n---|---|---|---\n" \
+						f"Total|{total_comments}|{total_submissions}|{total_comments + total_submissions}\n" \
+						f"User deleted|{deleted_comments}|{deleted_submissions}|{deleted_comments + deleted_submissions}\n" \
+						f"Mod removed (possibly in restricted threads)|{removed_comments}|{removed_submissions}|{removed_comments + removed_submissions}\n" \
+						f"Older than threshold of {subreddit.restricted['comment_days']} days ago|{date_comments}|{date_submissions}|{date_comments + date_submissions}\n" \
+						f"Karma of eligible items|{date_comment_karma}|{date_submission_karma}|{date_comment_karma + date_submission_karma}\n\n" \
+						f"Total eligible items: {date_comments + date_submissions} {("is" if count_eligible else "is not")} enough to meet the limit of {subreddit.restricted['comments']}.\n\n" \
+						f"Total karma of eligible items: {date_comment_karma + date_submission_karma} {("is" if karma_eligible else "is not")} enough to meet the limit of {subreddit.restricted['karma']} karma.\n\n" \
+						f"They are {("eligible" if count_eligible and karma_eligible else "not eligible")} to post in restricted threads."
+
+			item.reply(response_string)
+
+		item.mark_read()

@@ -99,7 +99,7 @@ if __name__ == "__main__":
 			'modmail': {'track': True},
 		},
 		restricted={
-			'flairs': {"Politics", "COVID19", "Local Crime"},
+			'flairs': {"Politics", "COVID19", "Local Crime", "Politics & Local Crime"},
 			'comment_days': 30,
 			'comments': 20,
 			'karma': 20,
@@ -143,6 +143,7 @@ if __name__ == "__main__":
 				bayarea.ingest_comments(subreddit, database)
 				bayarea.check_flair_changes(subreddit, database)
 				bayarea.backfill_karma(subreddit, database)
+				bayarea.check_messages(subreddit, database)
 
 			for subreddit in [comp_ow, bay_area]:
 				shared.count_queues(subreddit)

@@ -189,6 +189,71 @@ class Database:
 
 		self.init(self.location)
 
+	def get_user_counts(self, subreddit_id, user, threshold_date, is_deleted=None, is_removed=None):
+		comment_count, comment_karma = self.get_comment_counts(
+			subreddit_id=subreddit_id,
+			user=user,
+			threshold_date=threshold_date,
+			is_deleted=is_deleted,
+			is_removed=is_removed
+		)
+		submission_count, submission_karma = self.get_submission_counts(
+			subreddit_id=subreddit_id,
+			user=user,
+			threshold_date=threshold_date,
+			is_deleted=is_deleted,
+			is_removed=is_removed
+		)
+		return comment_count, submission_count, comment_karma, submission_karma
+
+	def get_comment_counts(self, subreddit_id, user, threshold_date, is_deleted=None, is_removed=None):
+		query = self.session.query(Comment) \
+			.filter(Comment.subreddit_id == subreddit_id) \
+			.filter(Comment.author == user) \
+			.filter(Comment.created < threshold_date)
+		if is_deleted is not None:
+			query = query.filter(Comment.is_deleted == is_deleted)
+		if is_removed is not None:
+			query = query.filter(Comment.is_removed == is_removed)
+		comment_count = query.count()
+
+		query = self.session.query(func.sum(Comment.karma).label('karma')) \
+			.filter(Comment.subreddit_id == subreddit_id) \
+			.filter(Comment.author == user) \
+			.filter(Comment.created < threshold_date)
+		if is_deleted is not None:
+			query = query.filter(Comment.is_deleted == is_deleted)
+		if is_removed is not None:
+			query = query.filter(Comment.is_removed == is_removed)
+		comment_karma = query.scalar()
+		if comment_karma is None:
+			comment_karma = 0
+		return comment_count, comment_karma
+
+	def get_submission_counts(self, subreddit_id, user, threshold_date, is_deleted=None, is_removed=None):
+		query = self.session.query(Submission) \
+			.filter(Submission.subreddit_id == subreddit_id) \
+			.filter(Submission.author == user) \
+			.filter(Submission.created < threshold_date)
+		if is_deleted is not None:
+			query = query.filter(Submission.is_deleted == is_deleted)
+		if is_removed is not None:
+			query = query.filter(Submission.is_removed == is_removed)
+		submission_count = query.count()
+
+		query = self.session.query(func.sum(Submission.karma).label('karma')) \
+			.filter(Submission.subreddit_id == subreddit_id) \
+			.filter(Submission.author == user) \
+			.filter(Submission.created < threshold_date)
+		if is_deleted is not None:
+			query = query.filter(Submission.is_deleted == is_deleted)
+		if is_removed is not None:
+			query = query.filter(Submission.is_removed == is_removed)
+		submission_karma = query.scalar()
+		if submission_karma is None:
+			submission_karma = 0
+		return submission_count, submission_karma
+
 	def update_object_counts(self):
 		for subreddit, subreddit_id in (("CompetitiveOverwatch", 1), ("bayarea", 2)):
 			counters.objects.labels(type="log_item", subreddit=subreddit).set(self.session.query(LogItem).filter_by(subreddit=subreddit).count())
