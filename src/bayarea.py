@@ -453,8 +453,8 @@ def check_messages(subreddit, database):
 						f"Mod removed (possibly in restricted threads)|{removed_comments}|{removed_submissions}|{removed_comments + removed_submissions}\n" \
 						f"Older than threshold of {subreddit.restricted['comment_days']} days ago|{date_comments}|{date_submissions}|{date_comments + date_submissions}\n" \
 						f"Karma of eligible items|{date_comment_karma}|{date_submission_karma}|{date_comment_karma + date_submission_karma}\n\n" \
-						f"Total eligible items: {date_comments + date_submissions} {("is" if count_eligible else "is not")} enough to meet the limit of {subreddit.restricted['comments']}.\n\n" \
-						f"Total karma of eligible items: {date_comment_karma + date_submission_karma} {("is" if karma_eligible else "is not")} enough to meet the limit of {subreddit.restricted['karma']} karma.\n\n" \
+						f"Total eligible items: {date_comments + date_submissions} {('is' if count_eligible else 'is not')} enough to meet the limit of {subreddit.restricted['comments']}.\n\n" \
+						f"Total karma of eligible items: {date_comment_karma + date_submission_karma} {('is' if karma_eligible else 'is not')} enough to meet the limit of {subreddit.restricted['karma']} karma.\n\n" \
 						f"They are {("eligible" if count_eligible and karma_eligible else "not eligible")} to post in restricted threads."
 
 			item.reply(response_string)
