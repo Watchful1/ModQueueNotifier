@@ -399,7 +399,7 @@ def backfill_karma(subreddit, database):
 
 
 def check_messages(subreddit, database):
-	for item in subreddit.reddit.unread():
+	for item in subreddit.reddit.inbox.unread():
 		if isinstance(item, Message) and item.author is not None and item.author.name in subreddit.moderators:
 			log.info(f"Processing message from u/{item.author.name}")
 			target_user = None
