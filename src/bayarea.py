@@ -300,7 +300,7 @@ def ingest_comments(subreddit, database):
 					good_comments, bad_comments = get_comments_for_thread(subreddit, database, db_submission.submission_id)
 					notify_string = f"Non-moderated submission is {round(age_in_hours, 1)} hours old with {len(good_comments)} comments from good accounts and {len(bad_comments)} comments from accounts with low history: <https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>"
 					log.info(notify_string)
-					subreddit.post_to_discord(notify_string)
+					#subreddit.post_to_discord(notify_string)
 					db_submission.is_notified = True
 
 
