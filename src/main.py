@@ -123,10 +123,10 @@ if __name__ == "__main__":
 
 			for subreddit in [comp_ow, bay_area]:
 				shared.ingest_log(subreddit, database)
-				shared.process_modqueue_comments(subreddit)
-				#shared.process_modqueue_comments_v2(subreddit)
-				shared.process_modqueue_submissions(subreddit)
-				#shared.process_modqueue_submissions_v2(subreddit)
+				#shared.process_modqueue_comments(subreddit)
+				shared.process_modqueue_comments_v2(subreddit)
+				#shared.process_modqueue_submissions(subreddit)
+				shared.process_modqueue_submissions_v2(subreddit)
 				shared.process_modqueue_old(subreddit)
 				shared.post_overlapping_actions(subreddit, database)
 
@@ -183,12 +183,10 @@ if __name__ == "__main__":
 
 
 # turn on:
-# rescan submissions too
 # remove posts from authors with recent crime posts
 # ban users who use the wrong flair
 # update link in comment/ban message, enhanced moderation is on
 # remove posts from authors with insufficient history
-# database purge
 # warning on flair change during rescan
 # new comment/submission report processing
 

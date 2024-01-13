@@ -158,11 +158,11 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				f"u/{db_user.name} removed. Self posts not allowed"
 			)
 
-			# comment_text = \
-			# 	f"This subreddit requires submissions on sensitive topics to be direct links to a news article. " \
-			# 	f"Your submission was either a self post or a link that included submission text so it has been removed.\n\n" \
-			# 	f"You can read more about this policy [here]() and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
-			# 	f"if you think this is a mistake."
+			comment_text = \
+				f"This subreddit requires submissions on sensitive topics to be direct links to a news article. " \
+				f"Your submission was either a self post or a link that included submission text so it has been removed.\n\n" \
+				f"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
+				f"if you think this is a mistake."
 
 		elif author_comment_restricted(subreddit, database, db_user):
 			log.warning(
@@ -170,11 +170,11 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				f"u/{db_user.name} removed. Insufficient subreddit history"
 			)
 
-			# comment_text = \
-			# 	f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. " \
-			# 	f"You don't meet our requirements so your submission has been removed.\n\n" \
-			# 	f"You can read more about this policy [here]() and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
-			# 	f"if you think this is a mistake."
+			comment_text = \
+				f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. " \
+				f"You don't meet our requirements so your submission has been removed.\n\n" \
+				f"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
+				f"if you think this is a mistake."
 
 		elif subreddit.days_between_restricted_submissions is not None:
 			submission_filter_date = datetime.utcnow() - timedelta(days=subreddit.days_between_restricted_submissions)
@@ -195,34 +195,34 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 					f"from {(datetime.utcnow() - previous_submission.created).days} days ago."
 				)
 
-				# comment_text = \
-				# 	f"This subreddit restricts submissions on sensitive topics to once every " \
-				# 	f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]" \
-				# 	f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) was " \
-				# 	f"{(datetime.utcnow() - previous_submission.created).days} days ago, this one has been removed.\n\n" \
-				# 	f"You can read more about this policy [here]() and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
-				# 	f"if you think this is a mistake."
+				comment_text = \
+					f"This subreddit restricts submissions on sensitive topics to once every " \
+					f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]" \
+					f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) was " \
+					f"{(datetime.utcnow() - previous_submission.created).days} days ago, this one has been removed.\n\n" \
+					f"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
+					f"if you think this is a mistake."
 
 				if flair_changed:
 					log.warning(f"Banning u/{db_user.name} for {subreddit.days_between_restricted_submissions} days due to incorrectly flaired submission")
-					# ban_message = f"Your [recent submission](https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/) was incorrectly " \
-					# 	f"flaired. Since the correct flair would have indicated it was a sensitive topic and you posted another [sensitive topic submission]" \
-					# 	f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) within the last " \
-					# 	f"{subreddit.days_between_restricted_submissions} days, you have been automatically banned.\n\n" \
-					# 	f"You can read more about this policy [here]() and reply to this message if you think this is a mistake."
-					#
-					# subreddit.sub_object.banned.add(
-					# 	db_user.name,
-					# 	duration=subreddit.days_between_restricted_submissions,
-					# 	ban_reason=f"Deliberate incorrect flair",
-					# 	ban_message=ban_message)
-					# utils.add_usernote(
-					# 	subreddit,
-					# 	db_user.name,
-					# 	subreddit.get_account_name(),
-					# 	"spamwarn",
-					# 	f"{subreddit.days_between_restricted_submissions}d - incorrect flair",
-					# 	f"https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/")
+					ban_message = f"Your [recent submission](https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/) was incorrectly " \
+						f"flaired. Since the correct flair would have indicated it was a sensitive topic and you posted another [sensitive topic submission]" \
+						f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) within the last " \
+						f"{subreddit.days_between_restricted_submissions} days, you have been automatically banned.\n\n" \
+						f"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and reply to this message if you think this is a mistake."
+
+					subreddit.sub_object.banned.add(
+						db_user.name,
+						duration=subreddit.days_between_restricted_submissions,
+						ban_reason=f"Deliberate incorrect flair",
+						ban_message=ban_message)
+					utils.add_usernote(
+						subreddit,
+						db_user.name,
+						subreddit.get_account_name(),
+						"spamwarn",
+						f"{subreddit.days_between_restricted_submissions}d - incorrect flair",
+						f"https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/")
 
 		if comment_text is not None:
 			comment_count = database.session.query(Comment).filter(Comment.submission_id == db_submission.submission_id).count()
@@ -236,11 +236,8 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 
 		elif subreddit.restricted['action'] == "remove":
 			bot_comment = reddit_submission.reply(
-				"Due to the topic, enhanced moderation has been turned on for this thread. Comments from users new "
-				"to r/bayarea will be automatically removed. See [this thread](https://www.reddit.com/r/bayarea/comments/p8hnzl/automatically_removing_comments_from_new_users_in/) for more details.")
-			# bot_comment = reddit_submission.reply(
-			# 	f"The flair of this posts indicates it's a controversial topic. Enhanced moderation has been turned on for this thread. Comments from users without a history of commenting in r/{subreddit.name} "
-			# 	"will be automatically removed. You can read more about this policy [here]().")
+				f"The flair of this posts indicates it's a controversial topic. Enhanced moderation has been turned on for this thread. Comments from users without a history of commenting in r/{subreddit.name} "
+				"will be automatically removed. You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/).")
 			subreddit.approve_comment(bot_comment, True)
 
 		good_comments, bad_comments = get_comments_for_thread(subreddit, database, reddit_submission.id)
