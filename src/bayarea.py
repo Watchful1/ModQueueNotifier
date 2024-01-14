@@ -234,6 +234,7 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				reddit_submission.mod.lock()
 				bot_comment = reddit_submission.reply(comment_text)
 				subreddit.approve_comment(bot_comment, True)
+				db_submission.is_removed = True
 
 		if comment_text is None and subreddit.restricted['action'] == "remove":
 			bot_comment = reddit_submission.reply(
