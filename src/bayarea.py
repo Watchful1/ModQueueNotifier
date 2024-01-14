@@ -225,16 +225,17 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 						f"https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/")
 
 		if comment_text is not None:
-			comment_count = database.session.query(Comment).filter(Comment.submission_id == db_submission.submission_id).count()
+			comment_count = database.session.query(Comment).filter(Comment.submission_id == db_submission.id).count()
 			if comment_count >= 10:
 				log.warning(f"Not removing submission because it has {comment_count} comments")
+				comment_text = None
 			else:
 				reddit_submission.mod.remove()
 				reddit_submission.mod.lock()
 				bot_comment = reddit_submission.reply(comment_text)
 				subreddit.approve_comment(bot_comment, True)
 
-		elif subreddit.restricted['action'] == "remove":
+		if comment_text is None and subreddit.restricted['action'] == "remove":
 			bot_comment = reddit_submission.reply(
 				f"The flair of this posts indicates it's a controversial topic. Enhanced moderation has been turned on for this thread. Comments from users without a history of commenting in r/{subreddit.name} "
 				"will be automatically removed. You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/).")
