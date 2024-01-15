@@ -152,6 +152,7 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 
 		db_user = db_submission.author
 		comment_text = None
+		ban_message = None
 		if reddit_submission.is_self or reddit_submission.is_reddit_media_domain or (reddit_submission.selftext is not None and reddit_submission.selftext != ""):
 			log.warning(
 				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
@@ -163,6 +164,10 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				f"Your submission was either a self post or a link that included submission text so it has been removed.\n\n" \
 				f"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
 				f"if you think this is a mistake."
+			ban_message = f"Your [recent submission](https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/) was incorrectly " \
+				f"flaired. Since the correct flair would have indicated it was a sensitive topic and we require discussions on these topics to be direct links to" \
+				f"news articles, you have been automatically banned for deliberately using an incorrect flair.\n\nYou can read more about this policy " \
+				f"[here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and reply to this message if you think this is a mistake."
 
 		elif author_comment_restricted(subreddit, database, db_user):
 			log.warning(
@@ -175,6 +180,10 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				f"You don't meet our requirements so your submission has been removed.\n\n" \
 				f"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
 				f"if you think this is a mistake."
+			ban_message = f"Your [recent submission](https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/) was incorrectly " \
+				f"flaired. Since the correct flair would have indicated it was a sensitive topic and this subreddit restricts submissions on those topics " \
+				f"to users with an established history in the sub, you have been automatically banned for deliberately using an incorrect flair.\n\n" \
+				f"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and reply to this message if you think this is a mistake."
 
 		elif subreddit.days_between_restricted_submissions is not None:
 			submission_filter_date = datetime.utcnow() - timedelta(days=subreddit.days_between_restricted_submissions)
@@ -202,27 +211,11 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 					f"{(datetime.utcnow() - previous_submission.created).days} days ago, this one has been removed.\n\n" \
 					f"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) " \
 					f"if you think this is a mistake."
-
-				if flair_changed:
-					log.warning(f"Banning u/{db_user.name} for {subreddit.days_between_restricted_submissions} days due to incorrectly flaired submission")
-					ban_message = f"Your [recent submission](https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/) was incorrectly " \
-						f"flaired. Since the correct flair would have indicated it was a sensitive topic and you posted another [sensitive topic submission]" \
-						f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) within the last " \
-						f"{subreddit.days_between_restricted_submissions} days, you have been automatically banned.\n\n" \
-						f"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and reply to this message if you think this is a mistake."
-
-					subreddit.sub_object.banned.add(
-						db_user.name,
-						duration=subreddit.days_between_restricted_submissions,
-						ban_reason=f"Deliberate incorrect flair",
-						ban_message=ban_message)
-					utils.add_usernote(
-						subreddit,
-						db_user.name,
-						subreddit.get_account_name(),
-						"spamwarn",
-						f"{subreddit.days_between_restricted_submissions}d - incorrect flair",
-						f"https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/")
+				ban_message = f"Your [recent submission](https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/) was incorrectly " \
+					f"flaired. Since the correct flair would have indicated it was a sensitive topic and you posted another [sensitive topic submission]" \
+					f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) within the last " \
+					f"{subreddit.days_between_restricted_submissions} days, you have been automatically banned for deliberately using an incorrect flair.\n\n" \
+					f"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and reply to this message if you think this is a mistake."
 
 		if comment_text is not None:
 			comment_count = database.session.query(Comment).filter(Comment.submission_id == db_submission.id).count()
@@ -235,6 +228,21 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				bot_comment = reddit_submission.reply(comment_text)
 				subreddit.approve_comment(bot_comment, True)
 				db_submission.is_removed = True
+
+			if flair_changed and ban_message is not None:
+				log.warning(f"Banning u/{db_user.name} for {subreddit.days_between_restricted_submissions} days due to incorrectly flaired submission")
+				subreddit.sub_object.banned.add(
+					db_user.name,
+					duration=subreddit.days_between_restricted_submissions,
+					ban_reason=f"Deliberate incorrect flair",
+					ban_message=ban_message)
+				utils.add_usernote(
+					subreddit,
+					db_user.name,
+					subreddit.get_account_name(),
+					"spamwarn",
+					f"{subreddit.days_between_restricted_submissions}d - incorrect flair",
+					f"https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/")
 
 		if comment_text is None and subreddit.restricted['action'] == "remove":
 			bot_comment = reddit_submission.reply(
