@@ -147,6 +147,8 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 		reprocess_submission = flair_restricted
 		flair_changed = True
 
+	log.info(f"Adding submission {reddit_submission.id} with flair {reddit_submission.link_flair_text} as {('restricted' if flair_restricted else 'not restricted')}. Reprocess: {reprocess_submission}")
+
 	if reprocess_submission:
 		log.info(f"Marking submission {reddit_submission.id} as restricted")
 
