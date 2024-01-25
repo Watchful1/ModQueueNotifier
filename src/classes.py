@@ -130,6 +130,8 @@ class Subreddit:
 			return -1
 
 	def check_threshold(self, bldr, level, key, string):
+		if key not in self.thresholds:
+			return False
 		if 'post' not in self.thresholds[key]:
 			return False
 		if level >= self.thresholds[key]['post']:
