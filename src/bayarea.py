@@ -223,7 +223,8 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				bldr.extend(comment_reasons)
 				bldr.append(
 					"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) "
-					"and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) if you think this is a mistake.")
+					"and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) if you think this is a mistake. Do not re-submit with a different flair "
+					"unless you confirm with the mods it's correct.")
 				comment_text = ''.join(bldr)
 
 				reddit_submission.mod.remove()
