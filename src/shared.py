@@ -487,7 +487,7 @@ def ping_queues(subreddit, database):
 			mods = defaultdict(int)
 			for item in database.session.query(LogItem).filter_by(subreddit=subreddit.case_sensitive_name).order_by(LogItem.created.desc()).limit(100).all():
 				minutes_old = (datetime.utcnow() - item.created).seconds / 60
-				if item.mod not in ("OWMatchThreads", "AutoModerator"):
+				if item.mod not in static.WHITELISTED_ACCOUNTS:
 					mods[item.mod] += 1
 				if minutes_old > 40:
 					break

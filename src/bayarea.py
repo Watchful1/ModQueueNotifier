@@ -9,6 +9,7 @@ log = discord_logging.get_logger()
 
 import counters
 import utils
+import static
 from database import Comment, User, Submission
 
 
@@ -49,7 +50,7 @@ def get_comments_for_thread(subreddit, database, thread_id):
 			author_result = author_comment_restricted(subreddit, database, comment.author)
 			author_dict[comment.author.name] = author_result
 
-		if author_result is None or comment.author.name == "CustomModBot":
+		if author_result is None or comment.author.name in static.WHITELISTED_ACCOUNTS:
 			good_comments.append((comment, "good"))
 		else:
 			bad_comments_dict[comment.comment_id] = (comment, author_result)
@@ -69,6 +70,9 @@ def get_comments_for_thread(subreddit, database, thread_id):
 
 
 def author_comment_restricted(subreddit, database, db_author):
+	if db_author.name in static.WHITELISTED_ACCOUNTS:
+		return None
+
 	min_comment_date = datetime.utcnow() - timedelta(days=subreddit.restricted['comment_days'])
 	count_comments = database.session.query(Comment)\
 		.filter(Comment.subreddit_id == subreddit.sub_id)\
@@ -293,7 +297,7 @@ def ingest_comments(subreddit, database):
 			subreddit_id=subreddit.sub_id
 		))
 
-		if db_submission.is_restricted and comment.author.name != "CustomModBot":
+		if db_submission.is_restricted and comment.author.name not in static.WHITELISTED_ACCOUNTS:
 			author_result = author_comment_restricted(subreddit, database, db_user)
 			if author_result is not None:
 				counters.user_comments.labels(subreddit=subreddit.name, result="filtered").inc()

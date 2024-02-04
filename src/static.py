@@ -8,6 +8,15 @@ from classes import Rule
 USER_AGENT = "ModQueueNotifier (by /u/Watchful1)"
 
 
+WHITELISTED_ACCOUNTS = {
+	"OWMatchThreads",
+	"AutoModerator",
+	"CustomModBot",
+	"bayarea-ModTeam",
+	"Competitiveoverwatch-ModTeam",
+}
+
+
 COMPOW_MODERATORS = {
 	#"merger3": "143730443777343488",
 	#"DerWaechter_": "193382989718093833",
