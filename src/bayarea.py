@@ -124,7 +124,7 @@ def action_comment(subreddit, comment, author_result):
 
 def add_submission(subreddit, database, db_submission, reddit_submission):
 	if reddit_submission.author is None or reddit_submission.author.name == "[deleted]":
-		log.warning(f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{reddit_submission.id}/>) doesnt have an author when adding to database")
+		#log.warning(f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{reddit_submission.id}/>) doesnt have an author when adding to database")
 		return None
 
 	flair_restricted = subreddit.flair_restricted(reddit_submission.link_flair_text)
@@ -159,23 +159,16 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 		db_user = db_submission.author
 		comment_reasons = []
 		ban_reasons = []
+		log_reasons = []
 		if reddit_submission.is_self or reddit_submission.is_reddit_media_domain or (reddit_submission.selftext is not None and reddit_submission.selftext != ""):
-			log.warning(
-				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
-				f"u/{db_user.name} removed. Self posts not allowed"
-			)
-
+			log_reasons.append("Self posts not allowed.")
 			comment_reasons.append(
 				f"This subreddit requires submissions on sensitive topics to be direct links to a news article. "
 				f"Your submission was either a text post, image, video or a link that also had text so it has been removed.\n\n")
 			ban_reasons.append(f"This subreddit require discussions on these topics to be direct links to news articles.\n\n")
 
 		if author_comment_restricted(subreddit, database, db_user):
-			log.warning(
-				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
-				f"u/{db_user.name} removed. Insufficient subreddit history"
-			)
-
+			log_reasons.append("Insufficient subreddit history.")
 			comment_reasons.append(
 				f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. "
 				f"You don't meet our requirements so your submission has been removed.\n\n")
@@ -193,13 +186,9 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				.first()
 
 			if previous_submission is not None:
-				log.warning(
-					f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
-					f"u/{db_user.name} removed. "
+				log_reasons.append(
 					f"[Recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}/>) "
-					f"from {(datetime.utcnow() - previous_submission.created).days} days ago."
-				)
-
+					f"from {(datetime.utcnow() - previous_submission.created).days} days ago.")
 				comment_reasons.append(
 					f"This subreddit restricts submissions on sensitive topics to once every "
 					f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]"
@@ -212,6 +201,11 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 
 		comment_text = None
 		if len(comment_reasons) > 0:
+			log.warning(
+				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
+				f"u/{db_user.name} removed. {(' '.join(log_reasons))}"
+			)
+
 			comment_count = database.session.query(Comment).filter(Comment.submission_id == db_submission.id).count()
 			if comment_count >= 10:
 				log.warning(f"Not removing submission because it has {comment_count} comments")
