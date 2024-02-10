@@ -157,53 +157,52 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 		log.info(f"Marking submission {reddit_submission.id} as restricted")
 
 		db_user = db_submission.author
-		comment_reasons = []
-		ban_reasons = []
-		log_reasons = []
-		if reddit_submission.is_self or reddit_submission.is_reddit_media_domain or (reddit_submission.selftext is not None and reddit_submission.selftext != ""):
-			log_reasons.append("Self posts not allowed.")
-			comment_reasons.append(
-				f"This subreddit requires submissions on sensitive topics to be direct links to a news article. "
-				f"Your submission was either a text post, image, video or a link that also had text so it has been removed.\n\n")
-			ban_reasons.append(f"This subreddit require discussions on these topics to be direct links to news articles.\n\n")
-
-		if author_comment_restricted(subreddit, database, db_user):
-			log_reasons.append("Insufficient subreddit history.")
-			comment_reasons.append(
-				f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. "
-				f"You don't meet our requirements so your submission has been removed.\n\n")
-			ban_reasons.append(f"This subreddit restricts submissions on those topics to users with an established history in the sub.\n\n")
-
-		if subreddit.days_between_restricted_submissions is not None:
-			submission_filter_date = datetime.utcnow() - timedelta(days=subreddit.days_between_restricted_submissions)
-			previous_submission = database.session.query(Submission) \
-				.filter(Submission.submission_id != db_submission.submission_id) \
-				.filter(Submission.author == db_user) \
-				.filter(Submission.is_restricted == True) \
-				.filter(Submission.is_removed == False)\
-				.filter(Submission.created > submission_filter_date) \
-				.order_by(Submission.created.desc()) \
-				.first()
-
-			if previous_submission is not None:
-				log_reasons.append(
-					f"[Recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}/>) "
-					f"from {(datetime.utcnow() - previous_submission.created).days} days ago.")
-				comment_reasons.append(
-					f"This subreddit restricts submissions on sensitive topics to once every "
-					f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]"
-					f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) was "
-					f"{(datetime.utcnow() - previous_submission.created).days} days ago, this one has been removed.\n\n")
-				ban_reasons.append(
-					f"You posted another [sensitive topic submission]"
-					f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) within the last "
-					f"{subreddit.days_between_restricted_submissions} days\n\n")
-
+		previous_submission = database.session.query(Submission) \
+			.filter(Submission.submission_id != db_submission.submission_id) \
+			.filter(Submission.author == db_user) \
+			.filter(Submission.is_restricted == True) \
+			.filter(Submission.is_removed == False) \
+			.filter(Submission.created > datetime.utcnow() - timedelta(days=subreddit.days_between_restricted_submissions)) \
+			.order_by(Submission.created.desc()) \
+			.first()
 		comment_text = None
-		if len(comment_reasons) > 0:
+		ban_reason = None
+		log_reason = None
+		if author_comment_restricted(subreddit, database, db_user):
+			log_reason = "Insufficient subreddit history."
+			comment_text = \
+				f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. " \
+				f"You don't meet our requirements so your submission has been removed. Do not re-submit with a different flair unless you confirm with " \
+				f"the mods it's correct."
+			ban_reason = f"This subreddit restricts submissions on those topics to users with an established history in the sub.\n\n"
+
+		elif subreddit.days_between_restricted_submissions is not None and previous_submission is not None:
+			log_reason = \
+				f"[Recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}/>) " \
+				f"from {(datetime.utcnow() - previous_submission.created).days} days ago."
+			comment_text = \
+				f"This subreddit restricts submissions on sensitive topics to once every " \
+				f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]" \
+				f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) was " \
+				f"{(datetime.utcnow() - previous_submission.created).days} days ago, this one has been removed. Do not re-submit until it has been " \
+				f"{subreddit.days_between_restricted_submissions} days since your last post."
+			ban_reason = \
+				f"You posted another [sensitive topic submission]" \
+				f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) within the last " \
+				f"{subreddit.days_between_restricted_submissions} days\n\n"
+
+		elif reddit_submission.is_self or reddit_submission.is_reddit_media_domain or (reddit_submission.selftext is not None and reddit_submission.selftext != ""):
+			log_reason = "Self posts not allowed."
+			comment_text = \
+				f"This subreddit requires submissions on sensitive topics to be direct links to a news article. Your submission was either " \
+				f"a text post, image, video or a link that also had text so it has been removed. If you have a news article, you can resubmit with " \
+				f"just that link."
+			ban_reason = f"This subreddit require discussions on these topics to be direct links to news articles.\n\n"
+
+		if comment_text is not None:
 			log.warning(
 				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
-				f"u/{db_user.name} removed. {(' '.join(log_reasons))}"
+				f"u/{db_user.name} removed. {log_reason}"
 			)
 
 			comment_count = database.session.query(Comment).filter(Comment.submission_id == db_submission.id).count()
@@ -211,15 +210,9 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				log.warning(f"Not removing submission because it has {comment_count} comments")
 				comment_text = None
 			else:
-				bldr = []
-				if len(comment_reasons) > 1:
-					bldr.append("Your submission has been removed for the following reasons:\n\n")
-				bldr.extend(comment_reasons)
-				bldr.append(
-					"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) "
-					"and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) if you think this is a mistake. Do not re-submit with a different flair "
-					"unless you confirm with the mods it's correct.")
-				comment_text = ''.join(bldr)
+				comment_text = f"{comment_text}\n\n" \
+					"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) " \
+					f"and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) if you think this is a mistake."
 
 				reddit_submission.mod.remove()
 				reddit_submission.mod.lock()
@@ -230,20 +223,17 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 			if flair_changed:
 				log.warning(f"Banning u/{db_user.name} for {subreddit.days_between_restricted_submissions} days due to incorrectly flaired submission")
 
-				bldr = [
-					f"Your [recent submission](https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/) was incorrectly flaired. ",
-					"The correct flair would have indicated it was a sensitive topic which would not have been allowed for the following reasons:\n\n"]
-				bldr.extend(ban_reasons)
-				bldr.append(
-					"Because of this you have been automatically banned for deliberately using an incorrect flair. You can read more about this policy "
-					"[here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and reply to this "
-					"message if you think this is a mistake.")
+				ban_reason = f"Your [recent submission](https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/) was incorrectly flaired. " \
+					f"The correct flair would have indicated it was a sensitive topic which would not have been allowed for the following reason:\n\n{ban_reason}" \
+					f"Because of this you have been automatically banned for deliberately using an incorrect flair. You can read more about this policy " \
+					f"[here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and reply to this " \
+					f"message if you think this is a mistake."
 
 				subreddit.sub_object.banned.add(
 					db_user.name,
 					duration=subreddit.days_between_restricted_submissions,
 					ban_reason=f"Deliberate incorrect flair",
-					ban_message=''.join(bldr))
+					ban_message=ban_reason)
 				utils.add_usernote(
 					subreddit,
 					db_user.name,
