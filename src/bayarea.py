@@ -130,12 +130,11 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 	flair_restricted = subreddit.flair_restricted(reddit_submission.link_flair_text)
 	reprocess_submission = False
 	flair_changed = False
+	db_user = database.session.query(User).filter_by(name=reddit_submission.author.name).first()
+	if db_user is None:
+		db_user = User(name=reddit_submission.author.name)
+		database.session.add(db_user)
 	if db_submission is None:
-		db_user = database.session.query(User).filter_by(name=reddit_submission.author.name).first()
-		if db_user is None:
-			db_user = User(name=reddit_submission.author.name)
-			database.session.add(db_user)
-
 		db_submission = Submission(
 			submission_id=reddit_submission.id,
 			created=datetime.utcfromtimestamp(reddit_submission.created_utc),
@@ -156,7 +155,6 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 	if reprocess_submission:
 		log.info(f"Marking submission {reddit_submission.id} as restricted")
 
-		db_user = db_submission.author
 		previous_submission = database.session.query(Submission) \
 			.filter(Submission.submission_id != db_submission.submission_id) \
 			.filter(Submission.author == db_user) \
@@ -193,7 +191,7 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				f"just that link."
 
 		if comment_text is not None:
-			log.warning(
+			log.info(
 				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
 				f"u/{db_user.name} removed. {log_reason}"
 			)
@@ -247,6 +245,21 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 			for comment, author_result in bad_comments:
 				action_comment(subreddit, comment, author_result)
 			log.warning(f"Finished submission <https://www.reddit.com{reddit_submission.permalink}>, removed {len(bad_comments)}/{len(good_comments) + len(bad_comments)} comments")
+
+	else:
+		recent_removed_submission = database.session.query(Submission) \
+			.filter(Submission.author == db_user) \
+			.filter(Submission.is_restricted == True) \
+			.filter(Submission.is_removed == True) \
+			.filter(Submission.created > datetime.utcnow() - timedelta(days=1)) \
+			.order_by(Submission.created.desc()) \
+			.first()
+		if recent_removed_submission is not None:
+			log.warning(
+				f"u/{db_user.name} non-restricted [submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) "
+				f"follows removed restricted [recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{recent_removed_submission.submission_id}/>)"
+			)
+
 
 	discord_logging.flush_discord()
 	return db_submission

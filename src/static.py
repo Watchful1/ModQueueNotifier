@@ -14,6 +14,7 @@ WHITELISTED_ACCOUNTS = {
 	"CustomModBot",
 	"bayarea-ModTeam",
 	"Competitiveoverwatch-ModTeam",
+	"comment-nuke",
 }
 
 
