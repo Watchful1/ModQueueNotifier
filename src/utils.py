@@ -1,4 +1,7 @@
 from datetime import datetime
+
+import praw
+
 import static
 import json
 import base64
@@ -88,3 +91,27 @@ def add_usernote(subreddit, username, mod_name, type, note_text, permalink):
 		user_note.add_new_note(note)
 		sub_notes.add_update_user_note(user_note)
 	save_usernotes(subreddit, sub_notes, f"\"create new note on user {username}\" via {subreddit.get_account_name()}")
+
+
+def warn_archive(author_obj, subreddit, subject, message):
+	try:
+		author_obj.message(
+			subject,
+			message,
+			from_subreddit=subreddit.name)
+	except praw.exceptions.RedditAPIException:
+		log.warning(f"Error sending warning message to u/{author_obj.name}")
+	found = False
+	for conversation in list(subreddit.all_modmail()):
+		#log.warning(f"{conversation.id} : {len(conversation.authors)} authors : u/{conversation.authors[0].name} : {len(conversation.messages)} messages")
+		if len(conversation.authors) == 2 and \
+				conversation.authors[0].name in {subreddit.get_account_name(), author_obj.name} and \
+				conversation.authors[1].name in {subreddit.get_account_name(), author_obj.name} and \
+				len(conversation.messages) == 1:
+			log.info(f"Archiving {conversation.authors[0].name} message: {conversation.id}")
+			conversation.archive()
+			subreddit.all_modmail().remove(conversation)
+			found = True
+			break
+	if not found:
+		log.warning(f"Couldn't find modmail to archive")

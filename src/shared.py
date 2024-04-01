@@ -172,28 +172,7 @@ def process_modqueue_comments_v2(subreddit):
 						warn_ban_message += f"\n\nFrom u/{mod_name}"
 					if days == 0:
 						log.info(f"Warning u/{username}, rule {rule.rule_number} from u/{mod_name}")
-						try:
-							item.author.message(
-								f"Rule {rule.rule_number} warning",
-								warn_ban_message,
-								from_subreddit=subreddit.name)
-						except praw.exceptions.RedditAPIException:
-							log.warning(f"Error sending warning message to u/{item.author.name}")
-						found = False
-						for conversation in list(subreddit.all_modmail()):
-							#log.warning(f"{conversation.id} : {len(conversation.authors)} authors : u/{conversation.authors[0].name} : {len(conversation.messages)} messages")
-							if len(conversation.authors) == 2 and \
-									conversation.authors[0].name in {subreddit.get_account_name(), username} and \
-									conversation.authors[1].name in {subreddit.get_account_name(), username} and \
-									len(conversation.messages) == 1:
-								log.info(f"Archiving {conversation.authors[0].name} message: {conversation.id}")
-								conversation.archive()
-								subreddit.all_modmail().remove(conversation)
-								found = True
-								break
-						if not found:
-							log.warning(f"Couldn't find modmail to archive")
-
+						utils.warn_archive(item.author, subreddit, f"Rule {rule.rule_number} warning", warn_ban_message)
 						note = Note.build_note(sub_notes, mod_name, "abusewarn", rule.short_text, datetime.utcnow(), item_link)
 					else:
 						if days == -1:
