@@ -31,8 +31,13 @@ def ingest_log(subreddit, database):
 		warning_items = []
 		if log_item.mod.name not in subreddit.moderators:
 			warning_type = "1"
-			if log_item.action in {'removecomment', 'removelink', 'marknsfw'}:
+			if log_item.action in {'removelink', 'marknsfw'}:
 				warning_items.append(f"[{log_item.target_title}](<https://www.reddit.com/{log_item.target_permalink}>) by u/{log_item.target_author}")
+			elif log_item.action == 'removecomment':
+				if log_item.description == "Identified by the abuse and harassment filter":
+					warning_type = None
+				else:
+					warning_items.append(f"[comment](<https://www.reddit.com/{log_item.target_permalink}>) by u/{log_item.target_author}")
 		elif subreddit.warning_log_types is not None and log_item.action in subreddit.warning_log_types:
 			sub_filters = subreddit.warning_log_types[log_item.action]
 			for item, value in sub_filters.items():
@@ -507,7 +512,7 @@ where l1.subreddit = '{subreddit.case_sensitive_name}'
 order by l1.created desc
 limit 100'''))
 	for mod1, action1, mod2, action2, fullname, permalink in result:
-		if not subreddit.recent_overlaps.contains(fullname):
+		if not subreddit.recent_overlaps.contains(fullname) and mod1 not in ('reddit', 'comment-nuke') and mod2 not in ('comment-nuke'):
 			action_name1 = "approved" if 'approve' in action1 else "removed"
 			action_name2 = "approved" if 'approve' in action2 else "removed"
 			item_type = "post" if 't3_' in fullname else "comment"

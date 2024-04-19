@@ -50,6 +50,7 @@ BAYAREA_MODERATORS = {
 	"AutoModerator": "AutoModerator",
 	"CustomModBot": "CustomModBot",
 	"BotDefense": "BotDefense",
+	"comment-nuke": "comment-nuke",
 }
 
 COMPOW_KNOWN_LOG_TYPES = {
