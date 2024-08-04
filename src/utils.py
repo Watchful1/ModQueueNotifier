@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 
 import praw
@@ -102,6 +103,7 @@ def warn_archive(author_obj, subreddit, subject, message):
 	except praw.exceptions.RedditAPIException:
 		log.warning(f"Error sending warning message to u/{author_obj.name}")
 	found = False
+	time.sleep(1)
 	for conversation in list(subreddit.all_modmail()):
 		#log.warning(f"{conversation.id} : {len(conversation.authors)} authors : u/{conversation.authors[0].name} : {len(conversation.messages)} messages")
 		if len(conversation.authors) == 2 and \

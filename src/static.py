@@ -14,6 +14,11 @@ WHITELISTED_ACCOUNTS = {
 	"CustomModBot",
 	"bayarea-ModTeam",
 	"Competitiveoverwatch-ModTeam",
+}
+
+REDDIT_ACCOUNTS = {
+	"reddit",
+	"Anti-Evil",
 	"comment-nuke",
 }
 

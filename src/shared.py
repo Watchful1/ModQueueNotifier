@@ -31,10 +31,17 @@ def ingest_log(subreddit, database):
 		warning_items = []
 		if log_item.mod.name not in subreddit.moderators:
 			warning_type = "1"
-			if log_item.action in {'removelink', 'marknsfw'}:
+			if log_item.action == 'marknsfw':
 				warning_items.append(f"[{log_item.target_title}](<https://www.reddit.com/{log_item.target_permalink}>) by u/{log_item.target_author}")
+			if log_item.action == 'removelink':
+				if log_item.mod in static.REDDIT_ACCOUNTS:
+					warning_type = None
+				else:
+					warning_items.append(f"[{log_item.target_title}](<https://www.reddit.com/{log_item.target_permalink}>) by u/{log_item.target_author}")
 			elif log_item.action == 'removecomment':
 				if log_item.description == "Identified by the abuse and harassment filter":
+					warning_type = None
+				elif log_item.mod in static.REDDIT_ACCOUNTS:
 					warning_type = None
 				else:
 					warning_items.append(f"[comment](<https://www.reddit.com/{log_item.target_permalink}>) by u/{log_item.target_author}")
@@ -208,7 +215,7 @@ def process_modqueue_comments_v2(subreddit):
 				if count_removed > 1:
 					log.info(f"Recursively removed {count_removed} comments")
 
-				log.warning(f"r/{subreddit.name}:u/{mod_name}: u/{username} {action_string}")
+				log.info(f"r/{subreddit.name}:u/{mod_name}: u/{username} {action_string}")
 
 				subreddit.modqueue().remove(item)
 				break
