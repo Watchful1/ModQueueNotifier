@@ -34,14 +34,14 @@ def ingest_log(subreddit, database):
 			if log_item.action == 'marknsfw':
 				warning_items.append(f"[{log_item.target_title}](<https://www.reddit.com/{log_item.target_permalink}>) by u/{log_item.target_author}")
 			if log_item.action == 'removelink':
-				if log_item.mod in static.REDDIT_ACCOUNTS:
+				if log_item.mod.name in static.REDDIT_ACCOUNTS:
 					warning_type = None
 				else:
 					warning_items.append(f"[{log_item.target_title}](<https://www.reddit.com/{log_item.target_permalink}>) by u/{log_item.target_author}")
 			elif log_item.action == 'removecomment':
 				if log_item.description == "Identified by the abuse and harassment filter":
 					warning_type = None
-				elif log_item.mod in static.REDDIT_ACCOUNTS:
+				elif log_item.mod.name in static.REDDIT_ACCOUNTS:
 					warning_type = None
 				else:
 					warning_items.append(f"[comment](<https://www.reddit.com/{log_item.target_permalink}>) by u/{log_item.target_author}")
