@@ -52,6 +52,8 @@ BAYAREA_MODERATORS = {
 	"which_objective": "714692771687956511",
 	"MsNewKicks": "811705167673688086",
 	#"DuckyFreeman": "318215764303675392",
+	"OskiBone": "102483320541044736",
+	"ithunk": "697210750720147486",
 	"AutoModerator": "AutoModerator",
 	"CustomModBot": "CustomModBot",
 	"BotDefense": "BotDefense",
