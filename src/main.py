@@ -81,6 +81,7 @@ if __name__ == "__main__":
 			'modmail': {'track': True, 'post': 5, 'ping': 8},
 			'modmail_hours': {'post': 12, 'ping': 24},
 		},
+		name_in_modmails=False,
 		webhook=discord_logging.get_config_var(praw_file, "OWMatchThreads", 'webhook_redditmodtalk'),
 		discord_link="https://discord.gg/competitiveow"
 	)
