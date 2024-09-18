@@ -207,6 +207,10 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 
 				reddit_submission.mod.remove()
 				reddit_submission.mod.lock()
+				for top_comment in reddit_submission.comments:
+					if top_comment.author is not None and top_comment.author.name == "AutoModerator":
+						log.warning(f"Would have removed automod comment when removing [submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>)")
+						#top_comment.mod.remove()
 				bot_comment = reddit_submission.reply(comment_text)
 				subreddit.approve_comment(bot_comment, True)
 				db_submission.is_removed = True
