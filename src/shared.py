@@ -79,12 +79,21 @@ def ingest_log(subreddit, database):
 		elif log_item.action not in subreddit.known_log_types:
 			warning_type = "2"
 
+		if log_item.action in ("addcontributor", "removecontributor") and len(subreddit.approved):
+			update_approved(subreddit)
+
 		if warning_type is not None:
 			log.warning(
 				f"r/{subreddit.name}: {warning_type}:Mod action by u/{log_item.mod.name}: {log_item.action} {' '.join(warning_items)}")
 
 		database.session.merge(LogItem(log_item))
 	discord_logging.flush_discord()
+
+
+def update_approved(subreddit):
+	subreddit.approved = []
+	for contributor in subreddit.sub_object.contributor():
+		subreddit.approved.append(contributor.name)
 
 
 def process_modqueue_reapprove(subreddit):

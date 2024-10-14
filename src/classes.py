@@ -81,6 +81,7 @@ class Subreddit:
 		self._appeal_modmail = None
 		self.mod_log = []
 		self.recent_overlaps = Queue(50)
+		self.approved = []
 
 		self.sub_object._fetch()
 		self.case_sensitive_name = self.sub_object.display_name

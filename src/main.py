@@ -113,11 +113,16 @@ if __name__ == "__main__":
 		days_between_restricted_submissions=7
 	)
 
-	last_backup = None
+	last_backup, last_periodic = None, None
 	while True:
 		loop_time = time.perf_counter()
 		try:
 			log.debug("Starting run")
+
+			if last_periodic is None or last_periodic < datetime.utcnow() - timedelta(minutes=15):
+				for subreddit in [bay_area]:
+					shared.update_approved(subreddit)
+				last_periodic = datetime.utcnow()
 
 			for subreddit in [comp_ow, bay_area]:
 				subreddit.clear_cache()
