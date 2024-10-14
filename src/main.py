@@ -135,10 +135,10 @@ if __name__ == "__main__":
 				shared.process_modqueue_submissions_v2(subreddit)
 				shared.process_modqueue_old(subreddit)
 				shared.post_overlapping_actions(subreddit, database)
+				shared.log_highlighted_modmail(subreddit, start_time)
 
 			for subreddit in [comp_ow]:
 				shared.process_modqueue_reapprove(subreddit)
-				shared.log_highlighted_modmail(subreddit, start_time)
 				shared.log_archived_modmail_no_response(subreddit, start_time)
 
 				compow.process_submissions(subreddit)
