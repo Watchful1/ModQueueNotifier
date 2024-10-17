@@ -20,6 +20,7 @@ REDDIT_ACCOUNTS = {
 	"reddit",
 	"Anti-Evil",
 	"comment-nuke",
+	"toolboxnotesxfer"
 }
 
 
