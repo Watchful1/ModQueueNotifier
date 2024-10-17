@@ -45,6 +45,8 @@ def ingest_log(subreddit, database):
 					warning_type = None
 				else:
 					warning_items.append(f"[comment](<https://www.reddit.com/{log_item.target_permalink}>) by u/{log_item.target_author}")
+			elif log_item.action == 'addnote' and log_item.mod.name in static.REDDIT_ACCOUNTS:
+				warning_type = None
 		elif subreddit.warning_log_types is not None and log_item.action in subreddit.warning_log_types:
 			sub_filters = subreddit.warning_log_types[log_item.action]
 			for item, value in sub_filters.items():
