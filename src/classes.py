@@ -296,7 +296,7 @@ class SubredditNotes:
 				user_notes.notes.append(Note(
 					sub_notes,
 					note_dict['m'],
-					note_dict['w'],
+					note_dict.get('w'),
 					note_dict['n'],
 					note_dict['t'],
 					note_dict['l']
@@ -336,7 +336,9 @@ class UserNotes:
 		for note in self.notes:
 			note_type = note.get_type()
 			note_is_old = note.get_datetime() < datetime.utcnow() - timedelta(days=182)  # roughly half a year
-			if note_type == 'ban':
+			if note_type is None:
+				continue
+			elif note_type == 'ban':
 				match = re.search(r'^\d+', note.get_text())
 				if match:
 					return int(match.group(0)), note_is_old, note.get_datetime()
@@ -366,6 +368,8 @@ class Note:
 		self._mod_id = self._sub_notes.user_to_order[mod_name]
 
 	def get_type(self):
+		if self._warning_id is None:
+			return
 		return self._sub_notes.order_to_warning[self._warning_id]
 
 	def set_type(self, type_name):
@@ -393,13 +397,15 @@ class Note:
 		return f"{self.get_mod()}:{self.get_type()}:{self.get_datetime().strftime('%Y-%m-%d %H:%M:%S')}: {self.get_text()} : {self.get_link()}"
 
 	def to_dict(self):
-		return {
+		note_dict = {
 			'n': self._note_text,
 			't': self._note_timestamp,
 			'm': self._mod_id,
-			'l': self._short_link,
-			'w': self._warning_id
+			'l': self._short_link
 		}
+		if self._warning_id is not None:
+			note_dict['w'] = self._warning_id
+		return note_dict
 
 	@staticmethod
 	def build_note(sub_notes, mod_name, note_type, note_text, note_time, permalink):
