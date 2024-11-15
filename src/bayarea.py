@@ -72,7 +72,7 @@ def get_comments_for_thread(subreddit, database, thread_id):
 def author_comment_restricted(subreddit, database, db_author):
 	if db_author.name in static.WHITELISTED_ACCOUNTS:
 		return None
-	if len(subreddit.approved) and db_author.name in static.WHITELISTED_ACCOUNTS:
+	if len(subreddit.approved) and db_author.name in subreddit.approved:
 		log.info(f"u/{db_author.name} is approved, permitting content")
 		return None
 
