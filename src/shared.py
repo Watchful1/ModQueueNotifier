@@ -444,7 +444,7 @@ def count_queues(subreddit):
 				if modmail_age < oldest_modmail:
 					oldest_modmail = modmail_age
 
-		subreddit.oldest_modmail_hours = math.trunc((datetime.utcnow() - oldest_modmail).seconds / (60 * 60))
+		subreddit.oldest_modmail_hours = math.trunc((datetime.utcnow() - oldest_modmail).total_seconds() / (60 * 60))
 
 		counters.queue_size.labels(type='modmail', subreddit=subreddit.name).set(subreddit.mail_count)
 		counters.queue_size.labels(type='modmail_hours', subreddit=subreddit.name).set(subreddit.oldest_modmail_hours)
@@ -456,7 +456,7 @@ def count_queues(subreddit):
 			oldest_unmod = datetime.utcfromtimestamp(submission.created_utc)
 			subreddit.oldest_unmod_link = f"https://www.reddit.com{submission.permalink}"
 
-		subreddit.oldest_unmod_hours = math.trunc((datetime.utcnow() - oldest_unmod).seconds / (60 * 60))
+		subreddit.oldest_unmod_hours = math.trunc((datetime.utcnow() - oldest_unmod).total_seconds() / (60 * 60))
 
 		counters.queue_size.labels(type='unmod', subreddit=subreddit.name).set(subreddit.unmod_count)
 		counters.queue_size.labels(type='unmod_hours', subreddit=subreddit.name).set(subreddit.oldest_unmod_hours)
