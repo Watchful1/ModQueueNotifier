@@ -294,12 +294,12 @@ class SubredditNotes:
 			for note_dict in notes_dict['ns']:
 				total_notes += 1
 				user_notes.notes.append(Note(
-					sub_notes,
-					note_dict['m'],
-					note_dict.get('w'),
-					note_dict['n'],
-					note_dict['t'],
-					note_dict['l']
+					sub_notes=sub_notes,
+					mod_id=note_dict['m'],
+					warning_id=note_dict.get('w'),
+					note_text=note_dict['n'],
+					note_timestamp=note_dict['t'],
+					short_link=note_dict.get('l')
 				))
 			sub_notes.add_update_user_note(user_notes)
 
@@ -401,10 +401,11 @@ class Note:
 			'n': self._note_text,
 			't': self._note_timestamp,
 			'm': self._mod_id,
-			'l': self._short_link
 		}
 		if self._warning_id is not None:
 			note_dict['w'] = self._warning_id
+		if self._short_link is not None:
+			note_dict['l'] = self._short_link
 		return note_dict
 
 	@staticmethod
@@ -420,7 +421,9 @@ class Note:
 
 	@staticmethod
 	def short_to_link(short):
-		if short.startswith("l,"):
+		if short is None:
+			return None
+		elif short.startswith("l,"):
 			parts = short.split(",")
 			if len(parts) == 3:  # this is a comment link
 				return f"https://www.reddit.com/comments/{parts[1]}/_/{parts[2]}"
