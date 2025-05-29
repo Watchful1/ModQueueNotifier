@@ -153,6 +153,7 @@ if __name__ == "__main__":
 
 			for subreddit in [comp_ow, bay_area]:
 				shared.count_queues(subreddit)
+			for subreddit in [comp_ow]:
 				shared.ping_queues(subreddit, database)
 
 			database.update_object_counts()
