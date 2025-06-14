@@ -168,30 +168,30 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 			.first()
 		comment_text = None
 		log_reason = None
-		if author_comment_restricted(subreddit, database, db_user):
-			log_reason = "Insufficient subreddit history."
-			comment_text = \
-				f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. " \
-				f"You don't meet our requirements so your submission has been removed. Do not re-submit with a different flair unless you confirm with " \
-				f"the mods it's correct."
-
-		elif subreddit.days_between_restricted_submissions is not None and previous_submission is not None:
-			log_reason = \
-				f"[Recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}/>) " \
-				f"from {(datetime.utcnow() - previous_submission.created).days} days ago."
-			comment_text = \
-				f"This subreddit restricts submissions on sensitive topics to once every " \
-				f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]" \
-				f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) was " \
-				f"{(datetime.utcnow() - previous_submission.created).days} days ago, this one has been removed. Do not re-submit until it has been " \
-				f"{subreddit.days_between_restricted_submissions} days since your last post."
-
-		elif reddit_submission.is_self or reddit_submission.is_reddit_media_domain or (reddit_submission.selftext is not None and reddit_submission.selftext != ""):
-			log_reason = "Self posts not allowed."
-			comment_text = \
-				f"This subreddit requires submissions on sensitive topics to be direct links to a news article. Your submission was either " \
-				f"a text post, image, video or a link that also had text so it has been removed. If you have a news article, you can resubmit with " \
-				f"just that link."
+		# if author_comment_restricted(subreddit, database, db_user):
+		# 	log_reason = "Insufficient subreddit history."
+		# 	comment_text = \
+		# 		f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. " \
+		# 		f"You don't meet our requirements so your submission has been removed. Do not re-submit with a different flair unless you confirm with " \
+		# 		f"the mods it's correct."
+		#
+		# elif subreddit.days_between_restricted_submissions is not None and previous_submission is not None:
+		# 	log_reason = \
+		# 		f"[Recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}/>) " \
+		# 		f"from {(datetime.utcnow() - previous_submission.created).days} days ago."
+		# 	comment_text = \
+		# 		f"This subreddit restricts submissions on sensitive topics to once every " \
+		# 		f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]" \
+		# 		f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) was " \
+		# 		f"{(datetime.utcnow() - previous_submission.created).days} days ago, this one has been removed. Do not re-submit until it has been " \
+		# 		f"{subreddit.days_between_restricted_submissions} days since your last post."
+		#
+		# elif reddit_submission.is_self or reddit_submission.is_reddit_media_domain or (reddit_submission.selftext is not None and reddit_submission.selftext != ""):
+		# 	log_reason = "Self posts not allowed."
+		# 	comment_text = \
+		# 		f"This subreddit requires submissions on sensitive topics to be direct links to a news article. Your submission was either " \
+		# 		f"a text post, image, video or a link that also had text so it has been removed. If you have a news article, you can resubmit with " \
+		# 		f"just that link."
 
 		if comment_text is not None:
 			log.info(
