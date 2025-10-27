@@ -26,6 +26,7 @@ class Subreddit:
 			webhook=None,
 			restricted=None,
 			backup_reddit=None,
+			non_mod_reddit=None,
 			name_in_modmails=True,
 			filtered_users=None,
 			discord_link=None,
@@ -36,6 +37,7 @@ class Subreddit:
 		self.sub_id = sub_id
 		self.reddit = reddit
 		self.backup_reddit = backup_reddit
+		self.non_mod_reddit = non_mod_reddit
 
 		self.moderators = moderators
 		self.known_log_types = known_log_types

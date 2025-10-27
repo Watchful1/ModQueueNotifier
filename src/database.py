@@ -53,14 +53,18 @@ class User(Base):
 	id = Column(Integer, primary_key=True)
 	name = Column(String(80, collation="NOCASE"), nullable=False, unique=True)
 	is_deleted = Column(Boolean, nullable=False)
+	is_private = Column(Boolean, nullable=False)
+	private_checked = Column(DateTime)
 
 	def __init__(
 		self,
 		name,
-		is_deleted=False
+		is_deleted=False,
+		is_private=False
 	):
 		self.name = name
 		self.is_deleted = is_deleted
+		self.is_private = is_private
 
 	def __str__(self):
 		return f"u/{self.name}"

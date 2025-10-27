@@ -51,7 +51,7 @@ if __name__ == "__main__":
 	database = Database()
 
 	instances = {}
-	for username in ['OWMatchThreads', 'CustomModBot', 'Watchful1']:
+	for username in ['OWMatchThreads', 'CustomModBot', 'Watchful1', 'Watchful1BotTest']:
 		try:
 			instances[username] = praw.Reddit(username, user_agent=static.USER_AGENT)
 			log.info(f"Logged into reddit as /u/{instances[username].user.me().name}")
@@ -107,6 +107,7 @@ if __name__ == "__main__":
 			'action': "remove"
 		},
 		backup_reddit=instances['Watchful1'],
+		non_mod_reddit=instances['Watchful1BotTest'],
 		name_in_modmails=False,
 		webhook=discord_logging.get_config_var(praw_file, "CustomModBot", 'webhook_moderatoronly'),
 		discord_link="https://discord.gg/35z3AA9xp3",

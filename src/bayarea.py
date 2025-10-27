@@ -69,12 +69,37 @@ def get_comments_for_thread(subreddit, database, thread_id):
 	return good_comments, bad_comments
 
 
+def update_profile_private(db_author, mod_reddit, non_mod_reddit, force_check=False):
+	if non_mod_reddit is None:
+		return False
+	if not force_check and db_author.private_checked is not None and db_author.private_checked > datetime.utcnow() - timedelta(days=1):
+		return db_author.is_private
+
+	log.info(f"Checking for private profile for u/{db_author.name}")
+	count_non_mod = len(list(non_mod_reddit.redditor(db_author.name).comments.new()))
+	db_author.private_checked = datetime.utcnow()
+	if count_non_mod > 0:
+		db_author.is_private = False
+		return False
+
+	count_mod = len(list(mod_reddit.redditor(db_author.name).comments.new()))
+	if count_mod > 0:
+		db_author.is_private = True
+		return True
+	db_author.is_private = False
+	return False
+
+
 def author_comment_restricted(subreddit, database, db_author):
 	if db_author.name in static.WHITELISTED_ACCOUNTS:
 		return None
 	if len(subreddit.approved) and db_author.name in subreddit.approved:
 		log.info(f"u/{db_author.name} is approved, permitting content")
 		return None
+
+	is_private = update_profile_private(db_author, subreddit.reddit, subreddit.non_mod_reddit)
+	if is_private:
+		return "private profile"
 
 	min_comment_date = datetime.utcnow() - timedelta(days=subreddit.restricted['comment_days'])
 	count_comments = database.session.query(Comment)\
@@ -465,6 +490,8 @@ def check_messages(subreddit, database):
 					count_eligible = date_comments + date_submissions >= subreddit.restricted['comments']
 					karma_eligible = date_comment_karma + date_submission_karma >= subreddit.restricted['karma']
 
+					is_private = update_profile_private(db_author, subreddit.reddit, subreddit.non_mod_reddit, True)
+
 					response_string = f"Subreddit history for u/{target_user}\n\n" \
 						f"Type|Comments|Submissions|Total\n---|---|---|---\n" \
 						f"All|{total_comments}|{total_submissions}|{total_comments + total_submissions}\n" \
@@ -475,7 +502,8 @@ def check_messages(subreddit, database):
 						f"User deleted objects won't appear in the user page, but are still counted towards their history in the subreddit. Mod removed objects, including comments automatically removed from restricted threads, don't count towards their history.\n\n" \
 						f"Total eligible items: {date_comments + date_submissions} {('is' if count_eligible else 'is not')} enough to meet the limit of {subreddit.restricted['comments']}.\n\n" \
 						f"Total karma of eligible items: {date_comment_karma + date_submission_karma} {('is' if karma_eligible else 'is not')} enough to meet the limit of {subreddit.restricted['karma']} karma.\n\n" \
-						f"They are {('eligible' if count_eligible and karma_eligible else '**not eligible**')} to post in restricted threads.\n\n" \
+						f"The user's profile is {('private' if is_private else 'public')}.\n\n" \
+						f"They are {('eligible' if count_eligible and karma_eligible and not is_private else '**not eligible**')} to post in restricted threads.\n\n" \
 						f"**Please do not give this information to the user.**"
 
 
