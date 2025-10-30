@@ -1,6 +1,8 @@
 import discord_logging
 import re
 import traceback
+
+import prawcore.exceptions
 from praw.models import Message
 from sqlalchemy.sql import func
 from datetime import datetime, timedelta
@@ -76,13 +78,19 @@ def update_profile_private(db_author, mod_reddit, non_mod_reddit, force_check=Fa
 		return db_author.is_private
 
 	log.info(f"Checking for private profile for u/{db_author.name}")
-	count_non_mod = len(list(non_mod_reddit.redditor(db_author.name).comments.new()))
+	try:
+		count_non_mod = len(list(non_mod_reddit.redditor(db_author.name).comments.new()))
+	except prawcore.exceptions.NotFound:
+		count_non_mod = 0
 	db_author.private_checked = datetime.utcnow()
 	if count_non_mod > 0:
 		db_author.is_private = False
 		return False
 
-	count_mod = len(list(mod_reddit.redditor(db_author.name).comments.new()))
+	try:
+		count_mod = len(list(mod_reddit.redditor(db_author.name).comments.new()))
+	except prawcore.exceptions.NotFound:
+		count_mod = 0
 	if count_mod > 0:
 		db_author.is_private = True
 		return True
