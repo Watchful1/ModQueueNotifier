@@ -537,9 +537,9 @@ def check_messages(subreddit, database):
 
 				if match:
 					try:
-						devvit_action = json.loads(item.body)
+						devvit_action = json.loads(match.group(0))
 					except json.JSONDecodeError as err:
-						log.warning(f"Failed to decode devvit action json: {item.body}")
+						log.warning(f"Failed to decode devvit action json: {match.group(0)}")
 						return
 				else:
 					log.warning(f"No json found in devvit action message: {item.body}")
