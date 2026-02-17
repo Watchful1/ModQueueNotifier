@@ -533,7 +533,9 @@ def check_messages(subreddit, database):
 			elif item.author.name == "custommodbot2":
 				log.info(f"Processing passed through message from devvit app")
 
-				match = re.search(r'\{.*\}', item.body, re.DOTALL)
+				message_body = item.body.replace(r"_\"", "_")
+
+				match = re.search(r'\{.*\}', message_body, re.DOTALL)
 
 				if match:
 					try:
@@ -542,7 +544,7 @@ def check_messages(subreddit, database):
 						log.warning(f"Failed to decode devvit action json: {match.group(0)}")
 						return
 				else:
-					log.warning(f"No json found in devvit action message: {item.body}")
+					log.warning(f"No json found in devvit action message: {message_body}")
 					return
 
 				if devvit_action["username"] not in subreddit.moderators:
