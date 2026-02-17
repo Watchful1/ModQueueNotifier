@@ -71,7 +71,7 @@ def get_comments_for_thread(subreddit, database, thread_id):
 	return good_comments, bad_comments
 
 
-def update_profile_private(db_author, mod_reddit, non_mod_reddit, force_check=False):
+def update_profile_private(db_author, mod_reddit, non_mod_reddit, force_check=False, save_time=True):
 	if non_mod_reddit is None:
 		return False
 	if not force_check and db_author.private_checked is not None and db_author.private_checked > datetime.utcnow() - timedelta(days=1):
@@ -82,7 +82,8 @@ def update_profile_private(db_author, mod_reddit, non_mod_reddit, force_check=Fa
 		count_non_mod = len(list(non_mod_reddit.redditor(db_author.name).comments.new()))
 	except prawcore.exceptions.NotFound:
 		count_non_mod = 0
-	db_author.private_checked = datetime.utcnow()
+	if save_time:
+		db_author.private_checked = datetime.utcnow()
 	if count_non_mod > 0:
 		db_author.is_private = False
 		return False
@@ -98,16 +99,12 @@ def update_profile_private(db_author, mod_reddit, non_mod_reddit, force_check=Fa
 	return False
 
 
-def author_comment_restricted(subreddit, database, db_author):
+def author_comment_restricted(subreddit, database, db_author, save_profile_time=True):
 	if db_author.name in static.WHITELISTED_ACCOUNTS:
 		return None
 	if len(subreddit.approved) and db_author.name in subreddit.approved:
 		log.info(f"u/{db_author.name} is approved, permitting content")
 		return None
-
-	is_private = update_profile_private(db_author, subreddit.reddit, subreddit.non_mod_reddit)
-	if is_private:
-		return "private profile"
 
 	min_comment_date = datetime.utcnow() - timedelta(days=subreddit.restricted['comment_days'])
 	count_comments = database.session.query(Comment)\
@@ -141,6 +138,10 @@ def author_comment_restricted(subreddit, database, db_author):
 		count_submission_karma = 0
 	if count_comment_karma + count_submission_karma < subreddit.restricted['karma']:
 		return f"karma {count_comment_karma} + {count_submission_karma} = {count_comment_karma + count_submission_karma} < {subreddit.restricted['karma']}"
+
+	is_private = update_profile_private(db_author, subreddit.reddit, subreddit.non_mod_reddit, save_time=save_profile_time)
+	if is_private:
+		return "private profile"
 
 	return None
 
@@ -201,7 +202,14 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 			.first()
 		comment_text = None
 		log_reason = None
-		if author_comment_restricted(subreddit, database, db_user):
+		restriction_reason = author_comment_restricted(subreddit, database, db_user, save_profile_time=False)
+		if restriction_reason == "private profile":
+			log_reason = "Private profile."
+			comment_text = \
+				f"This subreddit restricts submissions on sensitive topics from users who have a private profile. " \
+				f"Please change your profile to public and resubmit your post."
+
+		elif restriction_reason is not None:
 			log_reason = "Insufficient subreddit history."
 			comment_text = \
 				f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. " \
