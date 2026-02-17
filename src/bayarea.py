@@ -540,11 +540,11 @@ def check_messages(subreddit, database):
 					return
 
 				if devvit_action["username"] not in subreddit.moderators:
-					log.warning(f"User u/{devvit_action["username"]} triggered devvit action in r/{devvit_action["subredditName"]}, but they aren't in the mod list")
+					log.warning(f"User u/{(devvit_action["username"])} triggered devvit action in r/{(devvit_action["subredditName"])}, but they aren't in the mod list")
 					return
 
 				if devvit_action["action"] != "enhancedModeration":
-					log.warning(f"Devvit action {devvit_action["action"]} not supported")
+					log.warning(f"Devvit action {(devvit_action["action"])} not supported")
 					return
 
 				submission_id = devvit_action["postId"][3:]
