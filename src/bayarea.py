@@ -1,3 +1,4 @@
+import json
 import discord_logging
 import re
 import traceback
@@ -159,12 +160,12 @@ def action_comment(subreddit, comment, author_result):
 		log.warning(f"Invalid restriction action {subreddit.restricted['action']}")
 
 
-def add_submission(subreddit, database, db_submission, reddit_submission):
+def add_submission(subreddit, database, db_submission, reddit_submission, force_restrict=False, check_author=True):
 	if reddit_submission.author is None or reddit_submission.author.name == "[deleted]":
 		#log.warning(f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{reddit_submission.id}/>) doesnt have an author when adding to database")
 		return None
 
-	flair_restricted = subreddit.flair_restricted(reddit_submission.link_flair_text)
+	flair_restricted = force_restrict or subreddit.flair_restricted(reddit_submission.link_flair_text)
 	reprocess_submission = False
 	flair_changed = False
 	db_user = database.session.query(User).filter_by(name=reddit_submission.author.name).first()
@@ -190,100 +191,105 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 	log.info(f"Adding submission {reddit_submission.id} with flair {reddit_submission.link_flair_text} as {('restricted' if flair_restricted else 'not restricted')}. Reprocess: {reprocess_submission}")
 
 	if reprocess_submission:
-		log.info(f"Marking submission {reddit_submission.id} as restricted")
+		if check_author:
+			log.info(f"Marking submission {reddit_submission.id} as restricted")
 
-		previous_submission = database.session.query(Submission) \
-			.filter(Submission.submission_id != db_submission.submission_id) \
-			.filter(Submission.author == db_user) \
-			.filter(Submission.is_restricted == True) \
-			.filter(Submission.is_removed == False) \
-			.filter(Submission.created > datetime.utcnow() - timedelta(days=subreddit.days_between_restricted_submissions)) \
-			.order_by(Submission.created.desc()) \
-			.first()
-		comment_text = None
-		log_reason = None
-		restriction_reason = author_comment_restricted(subreddit, database, db_user, save_profile_time=False)
-		if restriction_reason == "private profile":
-			log_reason = "Private profile."
-			comment_text = \
-				f"This subreddit restricts submissions on sensitive topics from users who have a private profile. " \
-				f"Please change your profile to public and resubmit your post."
+			previous_submission = database.session.query(Submission) \
+				.filter(Submission.submission_id != db_submission.submission_id) \
+				.filter(Submission.author == db_user) \
+				.filter(Submission.is_restricted == True) \
+				.filter(Submission.is_removed == False) \
+				.filter(Submission.created > datetime.utcnow() - timedelta(days=subreddit.days_between_restricted_submissions)) \
+				.order_by(Submission.created.desc()) \
+				.first()
+			comment_text = None
+			log_reason = None
+			restriction_reason = author_comment_restricted(subreddit, database, db_user, save_profile_time=False)
+			if restriction_reason == "private profile":
+				log_reason = "Private profile."
+				comment_text = \
+					f"This subreddit restricts submissions on sensitive topics from users who have a private profile. " \
+					f"Please change your profile to public and resubmit your post."
 
-		elif restriction_reason is not None:
-			log_reason = "Insufficient subreddit history."
-			comment_text = \
-				f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. " \
-				f"You don't meet our requirements so your submission has been removed. Do not re-submit with a different flair unless you confirm with " \
-				f"the mods it's correct."
+			elif restriction_reason is not None:
+				log_reason = "Insufficient subreddit history."
+				comment_text = \
+					f"This subreddit restricts submissions on sensitive topics from users who don't have an established history of posting in the subreddit. " \
+					f"You don't meet our requirements so your submission has been removed. Do not re-submit with a different flair unless you confirm with " \
+					f"the mods it's correct."
 
-		elif subreddit.days_between_restricted_submissions is not None and previous_submission is not None:
-			log_reason = \
-				f"[Recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}/>) " \
-				f"from {(datetime.utcnow() - previous_submission.created).days} days ago."
-			comment_text = \
-				f"This subreddit restricts submissions on sensitive topics to once every " \
-				f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]" \
-				f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) was " \
-				f"{(datetime.utcnow() - previous_submission.created).days} days ago, this one has been removed. Do not re-submit until it has been " \
-				f"{subreddit.days_between_restricted_submissions} days since your last post."
+			elif subreddit.days_between_restricted_submissions is not None and previous_submission is not None:
+				log_reason = \
+					f"[Recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}/>) " \
+					f"from {(datetime.utcnow() - previous_submission.created).days} days ago."
+				comment_text = \
+					f"This subreddit restricts submissions on sensitive topics to once every " \
+					f"{subreddit.days_between_restricted_submissions} days per user. Since your previous sensitive topic [submission]" \
+					f"(https://www.reddit.com/r/{subreddit.name}/comments/{previous_submission.submission_id}) was " \
+					f"{(datetime.utcnow() - previous_submission.created).days} days ago, this one has been removed. Do not re-submit until it has been " \
+					f"{subreddit.days_between_restricted_submissions} days since your last post."
 
-		elif reddit_submission.is_self or reddit_submission.is_reddit_media_domain or (reddit_submission.selftext is not None and reddit_submission.selftext != ""):
-			log_reason = "Self posts not allowed."
-			comment_text = \
-				f"This subreddit requires submissions on sensitive topics to be direct links to a news article. Your submission was either " \
-				f"a text post, image, video or a link that also had text so it has been removed. If you have a news article, you can resubmit with " \
-				f"just that link."
+			elif reddit_submission.is_self or reddit_submission.is_reddit_media_domain or (reddit_submission.selftext is not None and reddit_submission.selftext != ""):
+				log_reason = "Self posts not allowed."
+				comment_text = \
+					f"This subreddit requires submissions on sensitive topics to be direct links to a news article. Your submission was either " \
+					f"a text post, image, video or a link that also had text so it has been removed. If you have a news article, you can resubmit with " \
+					f"just that link."
 
-		if comment_text is not None:
-			log.info(
-				f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
-				f"u/{db_user.name} removed. {log_reason}"
-			)
+			if comment_text is not None:
+				log.info(
+					f"[Submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) by "
+					f"u/{db_user.name} removed. {log_reason}"
+				)
 
-			comment_count = database.session.query(Comment).filter(Comment.submission_id == db_submission.id).count()
-			if comment_count >= 10:
-				log.warning(f"Not removing submission because it has {comment_count} comments")
-				comment_text = None
-			else:
-				comment_text = f"{comment_text}\n\n" \
-					"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) " \
-					f"and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) if you think this is a mistake."
+				comment_count = database.session.query(Comment).filter(Comment.submission_id == db_submission.id).count()
+				if comment_count >= 10:
+					log.warning(f"Not removing submission because it has {comment_count} comments")
+					comment_text = None
+				else:
+					comment_text = f"{comment_text}\n\n" \
+						"You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) " \
+						f"and [message the mods](https://www.reddit.com/message/compose/?to=/r/{subreddit.name}) if you think this is a mistake."
 
-				reddit_submission.mod.remove()
-				reddit_submission.mod.lock()
-				for top_comment in reddit_submission.comments:
-					if top_comment.author is not None and top_comment.author.name == "AutoModerator":
-						log.info(f"Removing automod comment when removing [submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>)")
-						top_comment.mod.remove()
-				bot_comment = reddit_submission.reply(comment_text)
+					reddit_submission.mod.remove()
+					reddit_submission.mod.lock()
+					for top_comment in reddit_submission.comments:
+						if top_comment.author is not None and top_comment.author.name == "AutoModerator":
+							log.info(f"Removing automod comment when removing [submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>)")
+							top_comment.mod.remove()
+					bot_comment = reddit_submission.reply(comment_text)
+					subreddit.approve_comment(bot_comment, True)
+					db_submission.is_removed = True
+
+				if flair_changed:
+					log.warning(f"Warning u/{db_user.name} due to incorrectly flaired submission")
+
+					warn_reason = f"The moderators changed the flair of your [recent submission](https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/) " \
+						f"to {reddit_submission.link_flair_text}. The new flair indicates that it's a sensitive topic and enhanced moderation has been turned on. In the future, " \
+						f"please be sure to use this flair for any posts that are likely to be controversial and benefit from enhanced moderation. You can read more about this policy " \
+						f"[here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and reply to this " \
+						f"message if you think this is a mistake."
+
+					utils.warn_archive(
+						reddit_submission.author,
+						subreddit,
+						f"Submission flair changed",
+						warn_reason)
+					# utils.add_usernote(
+					# 	subreddit,
+					# 	db_user.name,
+					# 	subreddit.get_account_name(),
+					# 	"spamwarn",
+					# 	f"{subreddit.days_between_restricted_submissions}d - incorrect flair",
+					# 	f"https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/")
+			if comment_text is None and subreddit.restricted['action'] == "remove":
+				bot_comment = reddit_submission.reply(
+					f"The flair of this posts indicates it's a controversial topic. Enhanced moderation has been turned on for this thread. Comments from users without a history of commenting in r/{subreddit.name} "
+					"will be automatically removed. You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/).")
 				subreddit.approve_comment(bot_comment, True)
-				db_submission.is_removed = True
-
-			if flair_changed:
-				log.warning(f"Warning u/{db_user.name} due to incorrectly flaired submission")
-
-				warn_reason = f"The moderators changed the flair of your [recent submission](https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/) " \
-					f"to {reddit_submission.link_flair_text}. The new flair indicates that it's a sensitive topic and enhanced moderation has been turned on. In the future, " \
-					f"please be sure to use this flair for any posts that are likely to be controversial and benefit from enhanced moderation. You can read more about this policy " \
-					f"[here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/) and reply to this " \
-					f"message if you think this is a mistake."
-
-				utils.warn_archive(
-					reddit_submission.author,
-					subreddit,
-					f"Submission flair changed",
-					warn_reason)
-				# utils.add_usernote(
-				# 	subreddit,
-				# 	db_user.name,
-				# 	subreddit.get_account_name(),
-				# 	"spamwarn",
-				# 	f"{subreddit.days_between_restricted_submissions}d - incorrect flair",
-				# 	f"https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/")
-
-		if comment_text is None and subreddit.restricted['action'] == "remove":
+		else:
 			bot_comment = reddit_submission.reply(
-				f"The flair of this posts indicates it's a controversial topic. Enhanced moderation has been turned on for this thread. Comments from users without a history of commenting in r/{subreddit.name} "
+				f"Enhanced moderation has been turned on for this thread. Comments from users without a history of commenting in r/{subreddit.name} "
 				"will be automatically removed. You can read more about this policy [here](https://www.reddit.com/r/bayarea/comments/195xvo5/restrictions_that_apply_to_political_and_crime/).")
 			subreddit.approve_comment(bot_comment, True)
 
@@ -307,7 +313,6 @@ def add_submission(subreddit, database, db_submission, reddit_submission):
 				f"u/{db_user.name} non-restricted [submission](<https://www.reddit.com/r/{subreddit.name}/comments/{db_submission.submission_id}/>) "
 				f"follows removed restricted [recent submission](<https://www.reddit.com/r/{subreddit.name}/comments/{recent_removed_submission.submission_id}/>)"
 			)
-
 
 	discord_logging.flush_discord()
 	return db_submission
@@ -460,69 +465,94 @@ def backfill_karma(subreddit, database):
 
 def check_messages(subreddit, database):
 	for item in subreddit.reddit.inbox.unread():
-		if isinstance(item, Message) and item.author is not None and item.author.name in subreddit.moderators:
-			log.info(f"Processing message from u/{item.author.name}")
-			target_user = None
-			if item.body is not None:
-				authors = re.findall(r'(?:u/)([\w-]+)', item.body)
-				if len(authors):
-					target_user = authors[0]
+		if isinstance(item, Message) and item.author is not None:
+			if item.author.name in subreddit.moderators:
+				log.info(f"Processing message from u/{item.author.name}")
+				target_user = None
+				if item.body is not None:
+					authors = re.findall(r'(?:u/)([\w-]+)', item.body)
+					if len(authors):
+						target_user = authors[0]
 
-			if target_user is None:
-				response_string = f"Couldn't find a username in your message"
-				log.warning(f"Couldn't find a username in message from u/{item.author.name}")
-			else:
-				log.info(f"Looking up u/{target_user}")
-				db_author = database.session.query(User).filter_by(name=target_user).first()
-				if db_author is None:
-					log.info("User doesn't exist")
-					response_string = f"User u/{target_user} doesn't have any recorded history in the subreddit"
+				if target_user is None:
+					response_string = f"Couldn't find a username in your message"
+					log.warning(f"Couldn't find a username in message from u/{item.author.name}")
 				else:
-					min_comment_date = datetime.utcnow() - timedelta(days=subreddit.restricted['comment_days'])
-					total_comments, total_submissions, total_comment_karma, total_submission_karma = database.get_user_counts(
-						subreddit_id=subreddit.sub_id,
-						user=db_author,
-						threshold_date=datetime.utcnow(),
-					)
-					deleted_comments, deleted_submissions, deleted_comment_karma, deleted_submission_karma = database.get_user_counts(
-						subreddit_id=subreddit.sub_id,
-						user=db_author,
-						threshold_date=datetime.utcnow(),
-						is_deleted=True,
-					)
-					removed_comments, removed_submissions, removed_comment_karma, removed_submission_karma = database.get_user_counts(
-						subreddit_id=subreddit.sub_id,
-						user=db_author,
-						threshold_date=datetime.utcnow(),
-						is_removed=True,
-					)
-					date_comments, date_submissions, date_comment_karma, date_submission_karma = database.get_user_counts(
-						subreddit_id=subreddit.sub_id,
-						user=db_author,
-						threshold_date=min_comment_date,
-						is_removed=False,
-					)
+					log.info(f"Looking up u/{target_user}")
+					db_author = database.session.query(User).filter_by(name=target_user).first()
+					if db_author is None:
+						log.info("User doesn't exist")
+						response_string = f"User u/{target_user} doesn't have any recorded history in the subreddit"
+					else:
+						min_comment_date = datetime.utcnow() - timedelta(days=subreddit.restricted['comment_days'])
+						total_comments, total_submissions, total_comment_karma, total_submission_karma = database.get_user_counts(
+							subreddit_id=subreddit.sub_id,
+							user=db_author,
+							threshold_date=datetime.utcnow(),
+						)
+						deleted_comments, deleted_submissions, deleted_comment_karma, deleted_submission_karma = database.get_user_counts(
+							subreddit_id=subreddit.sub_id,
+							user=db_author,
+							threshold_date=datetime.utcnow(),
+							is_deleted=True,
+						)
+						removed_comments, removed_submissions, removed_comment_karma, removed_submission_karma = database.get_user_counts(
+							subreddit_id=subreddit.sub_id,
+							user=db_author,
+							threshold_date=datetime.utcnow(),
+							is_removed=True,
+						)
+						date_comments, date_submissions, date_comment_karma, date_submission_karma = database.get_user_counts(
+							subreddit_id=subreddit.sub_id,
+							user=db_author,
+							threshold_date=min_comment_date,
+							is_removed=False,
+						)
 
-					count_eligible = date_comments + date_submissions >= subreddit.restricted['comments']
-					karma_eligible = date_comment_karma + date_submission_karma >= subreddit.restricted['karma']
+						count_eligible = date_comments + date_submissions >= subreddit.restricted['comments']
+						karma_eligible = date_comment_karma + date_submission_karma >= subreddit.restricted['karma']
 
-					is_private = update_profile_private(db_author, subreddit.reddit, subreddit.non_mod_reddit, True)
+						is_private = update_profile_private(db_author, subreddit.reddit, subreddit.non_mod_reddit, True)
 
-					response_string = f"Subreddit history for u/{target_user}\n\n" \
-						f"Type|Comments|Submissions|Total\n---|---|---|---\n" \
-						f"All|{total_comments}|{total_submissions}|{total_comments + total_submissions}\n" \
-						f"User deleted|{deleted_comments}|{deleted_submissions}|{deleted_comments + deleted_submissions}\n" \
-						f"Mod removed (possibly in restricted threads)|{removed_comments}|{removed_submissions}|{removed_comments + removed_submissions}\n" \
-						f"Older than threshold of {subreddit.restricted['comment_days']} days ago|{date_comments}|{date_submissions}|{date_comments + date_submissions}\n" \
-						f"Karma of eligible items|{date_comment_karma}|{date_submission_karma}|{date_comment_karma + date_submission_karma}\n\n" \
-						f"User deleted objects won't appear in the user page, but are still counted towards their history in the subreddit. Mod removed objects, including comments automatically removed from restricted threads, don't count towards their history.\n\n" \
-						f"Total eligible items: {date_comments + date_submissions} {('is' if count_eligible else 'is not')} enough to meet the limit of {subreddit.restricted['comments']}.\n\n" \
-						f"Total karma of eligible items: {date_comment_karma + date_submission_karma} {('is' if karma_eligible else 'is not')} enough to meet the limit of {subreddit.restricted['karma']} karma.\n\n" \
-						f"The user's profile is {('private' if is_private else 'public')}.\n\n" \
-						f"They are {('eligible' if count_eligible and karma_eligible and not is_private else '**not eligible**')} to post in restricted threads.\n\n" \
-						f"**Please do not give this information to the user.**"
+						response_string = f"Subreddit history for u/{target_user}\n\n" \
+							f"Type|Comments|Submissions|Total\n---|---|---|---\n" \
+							f"All|{total_comments}|{total_submissions}|{total_comments + total_submissions}\n" \
+							f"User deleted|{deleted_comments}|{deleted_submissions}|{deleted_comments + deleted_submissions}\n" \
+							f"Mod removed (possibly in restricted threads)|{removed_comments}|{removed_submissions}|{removed_comments + removed_submissions}\n" \
+							f"Older than threshold of {subreddit.restricted['comment_days']} days ago|{date_comments}|{date_submissions}|{date_comments + date_submissions}\n" \
+							f"Karma of eligible items|{date_comment_karma}|{date_submission_karma}|{date_comment_karma + date_submission_karma}\n\n" \
+							f"User deleted objects won't appear in the user page, but are still counted towards their history in the subreddit. Mod removed objects, including comments automatically removed from restricted threads, don't count towards their history.\n\n" \
+							f"Total eligible items: {date_comments + date_submissions} {('is' if count_eligible else 'is not')} enough to meet the limit of {subreddit.restricted['comments']}.\n\n" \
+							f"Total karma of eligible items: {date_comment_karma + date_submission_karma} {('is' if karma_eligible else 'is not')} enough to meet the limit of {subreddit.restricted['karma']} karma.\n\n" \
+							f"The user's profile is {('private' if is_private else 'public')}.\n\n" \
+							f"They are {('eligible' if count_eligible and karma_eligible and not is_private else '**not eligible**')} to post in restricted threads.\n\n" \
+							f"**Please do not give this information to the user.**"
+
+				item.reply(response_string)
+
+			elif item.author.name == "custommodbot2":
+				log.info(f"Processing passed through message from devvit app")
+
+				try:
+					devvit_action = json.loads(item.body)
+				except json.JSONDecodeError as err:
+					log.warning(f"Failed to decode devvit action json: {item.body}")
+					return
+
+				if devvit_action["username"] not in subreddit.moderators:
+					log.warning(f"User u/{devvit_action["username"]} triggered devvit action in r/{devvit_action["subredditName"]}, but they aren't in the mod list")
+					return
+
+				if devvit_action["action"] != "enhancedModeration":
+					log.warning(f"Devvit action {devvit_action["action"]} not supported")
+					return
+
+				submission_id = devvit_action["postId"][3:]
+				add_submission(subreddit, database, None, subreddit.reddit.submission(submission_id))
 
 
-			item.reply(response_string)
+
+
+
 
 		item.mark_read()
