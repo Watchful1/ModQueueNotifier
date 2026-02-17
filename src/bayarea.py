@@ -533,7 +533,7 @@ def check_messages(subreddit, database):
 			elif item.author.name == "custommodbot2":
 				log.info(f"Processing passed through message from devvit app")
 
-				message_body = item.body.replace(r"_\"", "_")
+				message_body = item.body.replace(r"\_", "_")
 
 				match = re.search(r'\{.*\}', message_body, re.DOTALL)
 
