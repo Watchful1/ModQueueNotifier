@@ -556,7 +556,14 @@ def check_messages(subreddit, database):
 					return
 
 				submission_id = devvit_action["postId"][3:]
-				add_submission(subreddit, database, None, subreddit.reddit.submission(submission_id))
+				add_submission(
+					subreddit,
+					database,
+					database.session.query(Submission).filter_by(submission_id=submission_id).first(),
+					subreddit.reddit.submission(submission_id),
+					force_restrict=True,
+					check_author=False
+				)
 
 
 
