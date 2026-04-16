@@ -76,7 +76,7 @@ if __name__ == "__main__":
 		reapprove_reasons=['#2 No Low-Value Content', 'This is spam'],
 		thresholds={
 			'unmod': {'track': True, 'post': 15, 'ping': 20},
-			'unmod_hours': {'post': 4, 'ping': 6},
+			'unmod_hours': {'post': 4, 'ping': 24},
 			'modqueue': {'track': True, 'post': 8, 'ping': 12},
 			'modmail': {'track': True, 'post': 5, 'ping': 8},
 			'modmail_hours': {'post': 12, 'ping': 24},
