@@ -76,10 +76,10 @@ if __name__ == "__main__":
 		reapprove_reasons=['#2 No Low-Value Content', 'This is spam'],
 		thresholds={
 			'unmod': {'track': True, 'post': 15, 'ping': 20},
-			'unmod_hours': {'post': 4, 'ping': 24},
-			'modqueue': {'track': True, 'post': 8, 'ping': 12},
+			'unmod_hours': {'post': 16, 'ping': 24},
+			'modqueue': {'track': True, 'post': 10, 'ping': 16},
 			'modmail': {'track': True, 'post': 5, 'ping': 8},
-			'modmail_hours': {'post': 12, 'ping': 24},
+			'modmail_hours': {'post': 18, 'ping': 24},
 		},
 		name_in_modmails=False,
 		webhook=discord_logging.get_config_var(praw_file, "OWMatchThreads", 'webhook_redditmodtalk'),
