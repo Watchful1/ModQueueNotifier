@@ -332,6 +332,9 @@ def ingest_comments(subreddit, database):
 
 		db_submission = database.session.query(Submission).filter_by(submission_id=comment.link_id[3:]).first()
 		if db_submission is None:
+			submission_age = datetime.utcnow() - datetime.utcfromtimestamp(comment.submission.created_utc)
+			if submission_age.days >= 365:
+				continue
 			db_submission = add_submission(subreddit, database, None, comment.submission)
 		if db_submission is None:
 			continue
