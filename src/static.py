@@ -42,6 +42,7 @@ COMPOW_MODERATORS = {
 	"TheUltimate721": "330534850849406977",
 	"UnknownQTY": "432625266532024330",
 	"OWMatchThreads": "OWMatchThreads",
+	"CustomModBot": "CustomModBot",
 	"AutoModerator": "AutoModerator",
 }
 
@@ -122,13 +123,13 @@ BAYAREA_KNOWN_LOG_TYPES = {
 COMPOW_WARNING_LOG_TYPES = {
 	"banuser": {"details": "~permanent", "print": ["target_author", "details"]},
 	'unbanuser': {"description": "!was temporary"},
-	'editflair': {"mod": "!OWMatchThreads", "target_title": "!"},
-	'wikirevise': {"mod": "!OWMatchThreads", "details": "!Page usernotes edited"},
-	'editsettings': {"mod": "!OWMatchThreads", "details": "!description"},
+	'editflair': {"mod": "!CustomModBot", "target_title": "!"},
+	'wikirevise': {"mod": "!CustomModBot", "details": "!Page usernotes edited"},
+	'editsettings': {"mod": "!CustomModBot", "details": "!description"},
 }
 
 BAYAREA_WARNING_LOG_TYPES = {
-	'wikirevise': {"mod": "!OWMatchThreads", "details": "!Page usernotes edited"},
+	'wikirevise': {"mod": "!CustomModBot", "details": "!Page usernotes edited"},
 }
 
 REMOVAL_REASON_HEADER = """Thank you for your submission to /r/{}! Unfortunately it was removed for the following reason(s):"""

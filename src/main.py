@@ -51,7 +51,7 @@ if __name__ == "__main__":
 	database = Database()
 
 	instances = {}
-	for username in ['OWMatchThreads', 'CustomModBot', 'Watchful1', 'Watchful1BotTest']:
+	for username in ['CustomModBot', 'Watchful1', 'Watchful1BotTest']:
 		try:
 			instances[username] = praw.Reddit(username, user_agent=static.USER_AGENT)
 			log.info(f"Logged into reddit as /u/{instances[username].user.me().name}")
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 	comp_ow = Subreddit(
 		"CompetitiveOverwatch",
 		1,
-		instances['OWMatchThreads'],
+		instances['CustomModBot'],
 		static.COMPOW_MODERATORS,
 		known_log_types=static.COMPOW_KNOWN_LOG_TYPES,
 		warning_log_types=static.COMPOW_WARNING_LOG_TYPES,
@@ -82,7 +82,7 @@ if __name__ == "__main__":
 			'modmail_hours': {'post': 18, 'ping': 24},
 		},
 		name_in_modmails=False,
-		webhook=discord_logging.get_config_var(praw_file, "OWMatchThreads", 'webhook_redditmodtalk'),
+		webhook=discord_logging.get_config_var(praw_file, "CustomModBot", 'webhook_redditmodtalk'),
 		discord_link="https://discord.gg/competitiveow"
 	)
 	bay_area = Subreddit(
