@@ -44,6 +44,7 @@ COMPOW_MODERATORS = {
 	"OWMatchThreads": "OWMatchThreads",
 	"CustomModBot": "CustomModBot",
 	"AutoModerator": "AutoModerator",
+	"bot-bouncer": "bot-bouncer",
 }
 
 BAYAREA_MODERATORS = {
